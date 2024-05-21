@@ -72,7 +72,6 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     if received_count == NUM_MESSAGES:
         received_all_event.set()
 
-
 if __name__ == "__main__":
     cwd = os.getcwd()
 
@@ -99,8 +98,12 @@ if __name__ == "__main__":
     if not received_all_event.is_set():
         print("Waiting to receive message.")
 
+    # Set a timeout for 3 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
+    timeout = 3 * 60 * 60
+    end_time = start_time + timeout
+
     temp_received_count = 0
-    while True:
+    while time() < end_time and not received_all_event.is_set():
         # If received message is of type bytes, decode it.
         if isinstance(received_message, bytes):
             if received_message != '':  # Check if empty... the first one probs will be. Note: '' works, "" doesn't.
@@ -116,11 +119,11 @@ if __name__ == "__main__":
         # Update the detections dict
         # update_detections_dict(received_message_json)
 
-        iot_manager.publish(topic=iot_manager.publish_topic, payload=json.dumps(detections))  # Note: detections will be the triangulated coords
+        # iot_manager.publish(topic=iot_manager.publish_topic, payload=json.dumps(detections))  # Note: detections will be the triangulated coords
         temp_received_count = received_count
 
         # Wait until a new message is received.
-        while temp_received_count == received_count:
+        while temp_received_count == received_count and time() < end_time:
             sleep(0.01)
 
     print("outside of while loop")
