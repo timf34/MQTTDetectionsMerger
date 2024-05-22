@@ -20,12 +20,16 @@ class KalmanFilter:
         self.process_noise = process_noise
         self.measurement_noise = measurement_noise
 
-    def predict(self):
+    def reset(self, initial_state) -> None:
+        self.state = initial_state
+        self.covariance = np.eye(3)
+
+    def predict(self) -> None:
         # Assuming constant velocity model
         self.state = self.state
         self.covariance = self.covariance + self.process_noise
 
-    def update(self, measurement):
+    def update(self, measurement) -> None:
         innovation = measurement - self.state
         innovation_covariance = self.covariance + self.measurement_noise
         kalman_gain = self.covariance @ np.linalg.inv(innovation_covariance)
@@ -72,6 +76,17 @@ class MultiCameraTracker:
 
         self.camera_coords_json_path = camera_coords_json_path
         assert os.path.exists(self.camera_coords_json_path), f"File not found: {self.camera_coords_json_path}"
+
+        self._instantiate_cameras()
+
+    def _instantiate_cameras(self) -> None:
+        self.add_camera(camera_name="marvel1", match_date="20-08-2023")
+        self.add_camera(camera_name="marvel2", match_date="20-08-2023")
+        self.add_camera(camera_name="marvel3", match_date="20-08-2023")
+        self.add_camera(camera_name="marvel5", match_date="27-08-2023")
+        self.add_camera(camera_name="marvel6", match_date="19-08-2023")
+        self.add_camera(camera_name="marvel7", match_date="27-08-2023")
+        self.add_camera(camera_name="marvel8", match_date="27-08-2023")
 
     @staticmethod
     def calculate_midpoint(x1: float, y1: float, x2: float, y2: float) -> Tuple[float, float]:
@@ -301,10 +316,12 @@ class MultiCameraTracker:
 
             self.consecutive_detections += 1
 
-            if self.consecutive_detections >= 2 or self.consecutive_non_detections <= 10:
+            if self.consecutive_detections >= 2:
                 self.kalman_filter.predict()
                 self.kalman_filter.update(np.array([triangulated_det.x, triangulated_det.y, triangulated_det.z]))
                 triangulated_det.x, triangulated_det.y, triangulated_det.z = self.kalman_filter.state
+            else:
+                self.kalman_filter.reset(np.array([triangulated_det.x, triangulated_det.y, triangulated_det.z]))
 
             self.consecutive_non_detections = 0
             self.last_triangulated_position = triangulated_det
@@ -313,7 +330,7 @@ class MultiCameraTracker:
             self.consecutive_detections = 0
             self.consecutive_non_detections += 1
             if self.consecutive_non_detections >= self.max_consecutive_misses:  # Reset the kalman filter after 3 misses
-                self.kalman_filter = KalmanFilter(np.zeros(3), np.eye(3) * 0.01, np.eye(3) * 0.1)  # Reset the Kalman filter
+                self.kalman_filter.reset(np.zeros(3))  # Reset the Kalman filter
             return None
 
 
