@@ -14,7 +14,7 @@ class IOTClient:
             self,
             context: IOTContext,
             credentials: IOTCredentials,
-            subscribe_topic: Optional[str] = None,
+            subscribe_topic: str = None,
             publish_topic: Optional[str] = None,
             ca_bytes: Optional[bytes] = None
     ):
@@ -24,8 +24,6 @@ class IOTClient:
         self.publish_topic: Optional[str] = publish_topic
 
         print(f"Creating IOTClient with subscribe topic: {self.subscribe_topic} and publish topic: {self.publish_topic}")
-
-
 
         # Docs: https://aws.github.io/aws-iot-device-sdk-python-v2/awsiot/mqtt_connection_builder.html#awsiot.mqtt_connection_builder.mtls_from_path
         self._mqtt_connection = mqtt_connection_builder.mtls_from_path(
@@ -43,11 +41,14 @@ class IOTClient:
             keep_alive_secs=30,
         )
 
+        self.connected: bool = False
+
     def connect(self) -> futures.Future:
         print(f"Connecting to endpoint '{self.credentials.endpoint}' with client ID '{self.credentials.client_id}'")
         connection_future = self._mqtt_connection.connect()
-        connection_future.result() # block and wait for the result of the future
+        connection_future.result()  # block and wait for the result of the future
         print(f"Successfully connected to endpoint '{self.credentials.endpoint}'")
+        self.connected = True
         return connection_future
 
     def disconnect(self) -> futures.Future:
@@ -57,7 +58,10 @@ class IOTClient:
         print(f"Disconnected successfully from endpoint '{self.credentials.endpoint}'")
         return disconnection_future
 
-    def publish(self, topic: str = None, payload: str = None) -> futures.Future:
+    def publish(self, topic: str = None, payload: str = None) -> Optional[futures.Future]:
+        if self.connected is False:
+            print("Not connected! Can't publish anything")
+            return None
         if topic is None:
             topic = self.publish_topic
         if payload is None:
@@ -67,7 +71,7 @@ class IOTClient:
             payload=payload,
             qos=mqtt.QoS.AT_MOST_ONCE,
         )
-        # print(f"Published message: {payload} to topic: {topic} with packet id: {packet_id}")
+        print(f"Published message: {payload} to topic: {topic} with packet id: {packet_id}")
         return publish_future
 
     def subscribe(self, topic: str = None, handler=None) -> futures.Future:
@@ -84,11 +88,11 @@ class IOTClient:
             callback=handler,
         )
 
-        subscribe_result = subscribe_future.result() # block and wait for the result of the future
+        subscribe_result = subscribe_future.result()  # block and wait for the result of the future
         print(
             f"Successfully subscribed to topic '{topic}' with "
             f"packet id '{packet_id}' and qos `{str(subscribe_result['qos'])}`"
-          )
+        )
 
         return subscribe_future
 
