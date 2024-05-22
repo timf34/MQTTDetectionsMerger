@@ -1,24 +1,32 @@
 import json
 import os
 import threading
-from time import time, sleep
 import logging
+
 from logging import Formatter, FileHandler
-from typing import Union, Dict
+from time import time, sleep
+
 from aws_iot.IOTClient import IOTClient
 from aws_iot.IOTContext import IOTContext, IOTCredentials
 from config import MQTTMergerConfig
+from triangulation.triangulation_logic import MultiCameraTracker
+from utils import convert_dicts_to_detections
+
 
 NUM_MESSAGES = 1000000
-
 received_count = 0
 elapsed_time = 0
 received_message: str = ""
 received_all_event = threading.Event()
 
+
 config = MQTTMergerConfig()
 
-# Start a timer at 0 seconds
+tracker = MultiCameraTracker(
+    sport="afl",
+    camera_coords_json_path="./triangulation/triangulation_data/afl_camera_coordinates.json"
+)
+
 start_time = time()
 
 # Configure the logger
@@ -31,6 +39,7 @@ log_file = os.path.join(cwd, "detections.log")
 file_handler = FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
+
 # Create and set a JSON formatter
 class JsonFormatter(Formatter):
     def format(self, record):
@@ -41,11 +50,13 @@ class JsonFormatter(Formatter):
         }
         return json.dumps(log_record)
 
+
 json_formatter = JsonFormatter()
 file_handler.setFormatter(json_formatter)
 
 # Add the handler to the logger
 logger.addHandler(file_handler)
+
 
 def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     print(f"Received message from topic '{topic}' at {time()}: {payload}")
@@ -71,6 +82,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     if received_count == NUM_MESSAGES:
         received_all_event.set()
+
 
 if __name__ == "__main__":
     cwd = os.getcwd()
@@ -110,14 +122,23 @@ if __name__ == "__main__":
                 received_message = received_message.decode("utf-8")
         elif len(received_message) == 0:
             print("received_message is empty. Continuing...")
+            # TODO: TEMP SOLUTION SO TERMINAL ISN'T GETTING SPAMMED
+            sleep(0.2)
             continue
 
         received_message_json = json.loads(received_message)
         received_message_json["timestamp"] = elapsed_time  # This might be better off with time.time(), or whatever would match the message sent!
         print("received_message_json post whatever: ", received_message_json, "\n")
 
+        _detections = received_message_json["message"]  # TODO: changet the key here to "detections"
+        _detections = convert_dicts_to_detections(_detections)
+        print("detections: ", _detections)
+
         # Update the detections dict
         # update_detections_dict(received_message_json)
+
+        three_d_point = tracker.multi_camera_analysis(_detections, {})
+
 
         # iot_manager.publish(topic=iot_manager.publish_topic, payload=json.dumps(detections))  # Note: detections will be the triangulated coords
         temp_received_count = received_count
