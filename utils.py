@@ -4,6 +4,8 @@ import os
 from logging import Formatter, FileHandler
 from typing import Dict, List
 
+from data_models import Detections
+
 
 class JsonFormatter(Formatter):
     def format(self, record):
@@ -14,3 +16,7 @@ class JsonFormatter(Formatter):
             "message": record.getMessage()
         }
         return json.dumps(log_record)
+
+
+def convert_dicts_to_detections(dicts: List[Dict]) -> List[Detections]:
+    return [Detections(**d) for d in dicts]
