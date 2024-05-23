@@ -2,18 +2,17 @@ import json
 import os
 import threading
 import logging
-
 from logging import Formatter, FileHandler
 from time import time, sleep
+
 from aws_iot.IOTClient import IOTClient
 from aws_iot.IOTContext import IOTContext, IOTCredentials
 from config import MQTTMergerConfig
 from triangulation.triangulation_logic import MultiCameraTracker
 from utils import convert_dicts_to_detections
 
-
-# TODO: Need to measure average latency between cameras and this MQTT channel. Its important for
-#  filtering out older detections (see below)
+# TODO: Need to measure average latency between cameras and this MQTT channel. It's important for
+# filtering out older detections (see below)
 
 NUM_MESSAGES = 10000000
 received_count = 0
@@ -77,8 +76,8 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     # Log the received message and timestamp
     log_entry = {
-        "topic": topic,
-        "message": payload.decode('utf-8') if isinstance(payload, bytes) else payload,
+        "type": "received",
+        "message": received_message,
         "timestamp": elapsed_time
     }
     logger.info(json.dumps(log_entry))
@@ -93,7 +92,6 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     if received_count == NUM_MESSAGES:
         received_all_event.set()
 
-
 def send_detections_periodically():
     while not received_all_event.is_set():
         current_time = time()
@@ -104,18 +102,28 @@ def send_detections_periodically():
                 detections_to_send.append(detection)
 
         if detections_to_send:
-            print("Detections to send:", detections_to_send)
+            log_entry = {
+                "type": "detections_to_send",
+                "detections": [d.__dict__ for d in detections_to_send],
+                "timestamp": current_time
+            }
+            logger.info(json.dumps(log_entry))
+
             three_d_point = tracker.multi_camera_analysis(detections_to_send, {})
             if three_d_point is not None:
-                # TODO: This needs to be formatted for the devices properly as they'd expect it.
                 mqtt_message = {
                     "message": three_d_point,
                     "time": time()
                 }
+                log_entry = {
+                    "type": "published",
+                    "message": mqtt_message,
+                    "timestamp": time()
+                }
+                logger.info(json.dumps(log_entry))
                 iot_manager.publish(payload=json.dumps(mqtt_message))
 
         sleep(1 / 6)  # Wait for 1/6 seconds
-
 
 if __name__ == "__main__":
     cwd = os.getcwd()
