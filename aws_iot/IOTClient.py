@@ -62,10 +62,16 @@ class IOTClient:
         if self.connected is False:
             print("Not connected! Can't publish anything")
             return None
+
         if topic is None:
-            topic = self.publish_topic
+            if self.publish_topic is not None:
+                topic = self.publish_topic
+            else:
+                raise ValueError("No publish topic provided!")
+
         if payload is None:
             print("No payload provided! Won't be able to publish anything")
+
         publish_future, packet_id = self._mqtt_connection.publish(
             topic=topic,
             payload=payload,
@@ -76,7 +82,11 @@ class IOTClient:
 
     def subscribe(self, topic: str = None, handler=None) -> futures.Future:
         if topic is None:
-            topic = self.subscribe_topic
+            if self.subscribe_topic is not None:
+                topic = self.subscribe_topic
+            else:
+                raise ValueError("No subscribe topic provided!")
+
         print(f"Subscribing to topic '{topic}'")
         if handler is None:
             print("No handler provided! Won't be able to handle incoming messages - only sending them")
@@ -103,6 +113,7 @@ class IOTClient:
     @staticmethod
     def _on_conn_interrupted(connection, error, **kwargs):
         # Reconnect
-        print(f"Connection interrupted: {error}")
+        # TODO: need to handle this better!
+        raise ConnectionError("Connection interrupted. Ensure client ID isn't beind used elsewhere. Reconnecting...")
 
 
