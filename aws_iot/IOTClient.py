@@ -100,5 +100,9 @@ class IOTClient:
     def _on_conn_resumed(self, connection, return_code, session_present, **kwargs):
         pass
 
-    def _on_conn_interrupted(self, connection, error, **kwargs):
-        pass
+    @staticmethod
+    def _on_conn_interrupted(connection, error, **kwargs):
+        # Reconnect
+        print(f"Connection interrupted: {error}")
+
+
