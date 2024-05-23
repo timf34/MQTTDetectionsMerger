@@ -1,8 +1,8 @@
 import json
 import os
+import random
 import threading
 import logging
-import random
 from dataclasses import asdict
 from logging import Formatter, FileHandler
 from time import time, sleep
@@ -31,33 +31,44 @@ iot_manager = IOTClient(iot_context, iot_credentials, subscribe_topic=config.cam
 connect_future = iot_manager.connect()
 print("IOT receive manager connected!")
 
-
 def generate_random_detection(camera_id):
+    # Add noise/randomness to the timestamp
+    timestamp = time() + random.uniform(-0.06, 0.06)
     return Detections(
         camera_id=camera_id,
         probability=round(random.uniform(0.8, 1.0), 2),
-        timestamp=time(),
+        timestamp=timestamp,
         x=random.randint(0, 1920),
         y=random.randint(0, 1080),
         z=round(random.uniform(0.5, 1.5), 2)
     )
 
-
 def send_hardcoded_detections():
+    last_empty_send_time = time()
+    empty_send_interval = 5  # Interval in seconds to send an empty detection list
+
     try:
         while True:
-            detections = [
-                asdict(generate_random_detection(camera_id=1)),
-                asdict(generate_random_detection(camera_id=2)),
-                asdict(generate_random_detection(camera_id=3)),
-                asdict(generate_random_detection(camera_id=5)),
-                asdict(generate_random_detection(camera_id=6))
-            ]
+            current_time = time()
+            if current_time - last_empty_send_time >= empty_send_interval:
+                # Send an empty list of detections
+                mqtt_message = {
+                    "message": [],
+                    "time": current_time
+                }
+                last_empty_send_time = current_time
+            else:
+                detections = []
 
-            mqtt_message = {
-                "message": detections,
-                "time": time()
-            }
+                # Randomly decide whether to generate detections for each camera
+                for camera_id in [1, 2, 3, 5, 6]:
+                    if random.choice([True, False, False]):  # 1/3 chance of generating detections
+                        detections.append(asdict(generate_random_detection(camera_id)))
+
+                mqtt_message = {
+                    "message": detections,
+                    "time": current_time
+                }
 
             iot_manager.publish(payload=json.dumps(mqtt_message))
 
