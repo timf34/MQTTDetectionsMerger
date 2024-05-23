@@ -11,6 +11,10 @@ from config import MQTTMergerConfig
 from triangulation.triangulation_logic import MultiCameraTracker
 from utils import convert_dicts_to_detections
 
+
+# TODO: Need to measure average latency between cameras and this MQTT channel. Its important for
+#  filtering out older detections (see below)
+
 NUM_MESSAGES = 10000000
 received_count = 0
 elapsed_time = 0
@@ -96,11 +100,19 @@ def send_detections_periodically():
         detections_to_send = []
 
         for camera_id, detection in detections_buffer.items():
-            if current_time - detection.timestamp <= 0.2:  # Check if detection is within 1/4 second
+            if current_time - detection.timestamp <= 0.35:  # Check if detection is within 1/4 second + 0.15 seconds for latency between cameras and server (I need to measure the average latency here for this)
                 detections_to_send.append(detection)
 
         if detections_to_send:
-            tracker.multi_camera_analysis(detections_to_send, {})
+            print("Detections to send:", detections_to_send)
+            three_d_point = tracker.multi_camera_analysis(detections_to_send, {})
+            if three_d_point is not None:
+                # TODO: This needs to be formatted for the devices properly as they'd expect it.
+                mqtt_message = {
+                    "message": three_d_point,
+                    "time": time()
+                }
+                iot_manager.publish(payload=json.dumps(mqtt_message))
 
         sleep(1 / 6)  # Wait for 1/6 seconds
 
@@ -135,12 +147,8 @@ if __name__ == "__main__":
     threading.Thread(target=send_detections_periodically, daemon=True).start()
 
     # Set a timeout for 6 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
-    # TODO: temp, come up with better solution for production.
-    #  Or just leave this running indefinitely...?
-    #  Need to check that there isn't a timeout on the IOT Client
-    timeout = 12 * 60 * 60
-    end_time = start_time + timeout
 
+    # TODO: Ensure that this can run indefinitely and doesn't time out
     temp_received_count = 0
     while not received_all_event.is_set():
         if len(received_message) == 0:
