@@ -19,7 +19,7 @@ config = MQTTMergerConfig()
 iot_context = IOTContext()
 iot_credentials = IOTCredentials(
     cert_path=config.cert_path,
-    client_id="mergerReceiveMessages",
+    client_id="dummyCameraSending",
     endpoint=config.endpoint,
     region="eu-west-1",
     priv_key_path=config.private_key_path,
@@ -27,7 +27,7 @@ iot_credentials = IOTCredentials(
 )
 
 # IOT Manager receive.
-iot_manager = IOTClient(iot_context, iot_credentials, subscribe_topic=config.camera_topic, publish_topic=config.device_topic)
+iot_manager = IOTClient(iot_context, iot_credentials, publish_topic=config.camera_topic)
 connect_future = iot_manager.connect()
 print("IOT receive manager connected!")
 
