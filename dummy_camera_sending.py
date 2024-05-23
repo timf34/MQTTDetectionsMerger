@@ -2,7 +2,7 @@ import json
 import os
 import threading
 import logging
-
+import random
 from dataclasses import asdict
 from logging import Formatter, FileHandler
 from time import time, sleep
@@ -32,25 +32,47 @@ connect_future = iot_manager.connect()
 print("IOT receive manager connected!")
 
 
-detections_store = {
-    "1": [asdict(Detections(camera_id=1, probability=0, timestamp=0, x=100, y=100))],
-    "2": [asdict(Detections(camera_id=2, probability=0, timestamp=0, x=200, y=200))],
-    "3": [asdict(Detections(camera_id=3, probability=0, timestamp=0, x=300, y=300))],
-    "5": [asdict(Detections(camera_id=5, probability=0, timestamp=0, x=500, y=500))],
-    "6": [asdict(Detections(camera_id=6, probability=0, timestamp=0, x=600, y=600))],
-}
+def generate_random_detection(camera_id):
+    return Detections(
+        camera_id=camera_id,
+        probability=round(random.uniform(0.8, 1.0), 2),
+        timestamp=time(),
+        x=random.randint(0, 1920),
+        y=random.randint(0, 1080),
+        z=round(random.uniform(0.5, 1.5), 2)
+    )
 
 
-while True:
-    pass
-    # mqtt_message = {
-    #     "message": detections,
-    #     "time": time.time()
-    # }
-    #
-    # iot_manager.publish(payload=json.dumps(mqtt_message))
+def send_hardcoded_detections():
+    try:
+        while True:
+            detections = [
+                asdict(generate_random_detection(camera_id=1)),
+                asdict(generate_random_detection(camera_id=2)),
+                asdict(generate_random_detection(camera_id=3)),
+                asdict(generate_random_detection(camera_id=5)),
+                asdict(generate_random_detection(camera_id=6))
+            ]
+
+            mqtt_message = {
+                "message": detections,
+                "time": time()
+            }
+
+            iot_manager.publish(payload=json.dumps(mqtt_message))
+
+            # Sleep for a random interval between 0.01 and 0.5 seconds
+            sleep_interval = random.uniform(0.01, 0.5)
+            print(f"Sleeping for {sleep_interval} seconds")
+            sleep(sleep_interval)
+
+    except KeyboardInterrupt:
+        print("Interrupted by user")
+
+    finally:
+        iot_manager.disconnect()
+        print("IOT Client disconnected")
 
 
-
-
-
+if __name__ == "__main__":
+    send_hardcoded_detections()
