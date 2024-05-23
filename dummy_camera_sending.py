@@ -31,6 +31,7 @@ iot_manager = IOTClient(iot_context, iot_credentials, publish_topic=config.camer
 connect_future = iot_manager.connect()
 print("IOT receive manager connected!")
 
+
 def generate_random_detection(camera_id):
     # Add noise/randomness to the timestamp
     timestamp = time() + random.uniform(-0.06, 0.06)
@@ -43,7 +44,8 @@ def generate_random_detection(camera_id):
         z=round(random.uniform(0.5, 1.5), 2)
     )
 
-def send_hardcoded_detections():
+
+def send_randomly_generated_detections():
     last_empty_send_time = time()
     empty_send_interval = 5  # Interval in seconds to send an empty detection list
 
@@ -85,5 +87,25 @@ def send_hardcoded_detections():
         print("IOT Client disconnected")
 
 
+def send_hardcoded_detections():
+
+    sleep_times = [0.25, 0.05, 0.5, 0.1, 0.1, 0.1, 1, 0.05, 0.05, 2, 0.1]
+
+    for i in sleep_times:
+
+        detections = [
+            asdict(Detections(camera_id=1, x=i, y=69, z=1.0, probability=0.98, timestamp=time())),
+            asdict(Detections(camera_id=2, x=i, y=600, z=1.0, probability=0.98, timestamp=time()))
+        ]
+
+        mqtt_message = {
+            "message": detections,
+            "time": time()
+        }
+        iot_manager.publish(payload=json.dumps(mqtt_message))
+        sleep(i)
+
+
 if __name__ == "__main__":
+    # send_randomly_generated_detections
     send_hardcoded_detections()
