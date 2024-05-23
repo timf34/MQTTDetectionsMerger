@@ -11,7 +11,7 @@ from config import MQTTMergerConfig
 from triangulation.triangulation_logic import MultiCameraTracker
 from utils import convert_dicts_to_detections
 
-NUM_MESSAGES = 1000000
+NUM_MESSAGES = 10000000
 received_count = 0
 elapsed_time = 0
 received_message: str = ""
@@ -137,11 +137,12 @@ if __name__ == "__main__":
     # Set a timeout for 6 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
     # TODO: temp, come up with better solution for production.
     #  Or just leave this running indefinitely...?
+    #  Need to check that there isn't a timeout on the IOT Client
     timeout = 12 * 60 * 60
     end_time = start_time + timeout
 
     temp_received_count = 0
-    while time() < end_time and not received_all_event.is_set():
+    while not received_all_event.is_set():
         if len(received_message) == 0:
             print("received_message is empty. Continuing...")
             sleep(0.5)
