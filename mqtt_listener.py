@@ -2,6 +2,7 @@ import json
 import os
 import threading
 import logging
+from dataclasses import asdict
 from logging import Formatter, FileHandler
 from time import time, sleep
 
@@ -13,6 +14,9 @@ from utils import convert_dicts_to_detections
 
 # TODO: Need to measure average latency between cameras and this MQTT channel. It's important for
 # filtering out older detections (see below)
+
+
+# TODO: Remove all the backslashes from the log messages.
 
 NUM_MESSAGES = 10000000
 received_count = 0
@@ -112,13 +116,34 @@ def send_detections_periodically():
 
             three_d_point = tracker.multi_camera_analysis(detections_to_send, {})
             if three_d_point is not None:
+
+                # Converting to normalized coordinates for the device
+                normalized_x = min(three_d_point.x, 159.5)
+                normalized_y = min(three_d_point.y, 128.8)
+
+                normalized_x = normalized_x / 159.5
+                normalized_x *= 102
+
+                normalized_y = normalized_y / 128.8
+                normalized_y *= 128
+
                 mqtt_message = {
-                    "message": three_d_point,
-                    "time": time()
+                  "T": 0,
+                  "X": int(normalized_x),
+                  "Y": int(normalized_y),
+                  "P": 1,
+                  "Pa": 0,
+                  "G": 0,
+                  "O": 0
+                }
+                # TODO: Need to test these
+                log_message = {
+                    "mqtt_message": mqtt_message,
+                    "three_d_point": asdict(three_d_point),
                 }
                 log_entry = {
                     "type": "published",
-                    "message": mqtt_message,
+                    "message": log_message,
                     "timestamp": time()
                 }
                 logger.info(json.dumps(log_entry))
