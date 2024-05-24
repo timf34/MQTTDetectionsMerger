@@ -92,6 +92,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     if received_count == NUM_MESSAGES:
         received_all_event.set()
 
+
 def send_detections_periodically():
     while not received_all_event.is_set():
         current_time = time()
@@ -124,6 +125,7 @@ def send_detections_periodically():
                 iot_manager.publish(payload=json.dumps(mqtt_message))
 
         sleep(1 / 6)  # Wait for 1/6 seconds
+
 
 if __name__ == "__main__":
     cwd = os.getcwd()
