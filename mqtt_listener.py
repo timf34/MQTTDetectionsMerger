@@ -106,6 +106,15 @@ def send_detections_periodically():
             if current_time - detection.timestamp <= 0.35:  # Check if detection is within 1/4 second + 0.15 seconds for latency between cameras and server (I need to measure the average latency here for this)
                 detections_to_send.append(detection)
 
+        # if time() % 2 == 0:
+        #     detections_to_send.append(
+        #         Detections(camera_id=1, x=1027, y=844, z=1.0, probability=0.98, timestamp=time())
+        #     )
+        # else:
+        #     detections_to_send.append(
+        #         Detections(camera_id=6, x=964, y=801, z=1.0, probability=0.98, timestamp=time())
+        # )
+
         if detections_to_send:
             log_entry = {
                 "type": "detections_to_send",
