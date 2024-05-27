@@ -134,6 +134,7 @@ def send_detections_periodically():
                 normalized_x *= 102
 
                 normalized_y = normalized_y / 128.8
+                # TODO: This is an error
                 normalized_y *= 128
 
                 mqtt_message = {
