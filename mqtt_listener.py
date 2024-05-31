@@ -134,7 +134,7 @@ def send_detections_periodically():
                 normalized_x *= 102
 
                 normalized_y = normalized_y / 128.8
-                normalized_y *= 128
+                normalized_y *= 65
 
                 mqtt_message = {
                   "T": 0,
