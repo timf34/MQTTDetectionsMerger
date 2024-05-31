@@ -8,10 +8,6 @@ class MQTTMergerConfig:
         self.camera_topic: str = "marvel_AUS/cameras"  # MQTT topic to listen where the cameras publish to
         self.device_topic: str = "marvel_AUS/pub"  # MQTT topic to publish to where the device listens to
 
-
-        # Temp
-        self.device_topic: str = "dalymount_IRL/pub"
-
         if os.name == 'nt':
             self.endpoint: str = "a3lkzcadhi1yzr-ats.iot.eu-west-1.amazonaws.com"
             # self.cert_path: str = "./certs/marvel-fov-test/certificate.pem.crt"
