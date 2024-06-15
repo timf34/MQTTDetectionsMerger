@@ -3,12 +3,13 @@ import os.path
 import numpy as np
 from numpy.linalg import lstsq
 
+from copy import deepcopy
 from matplotlib.path import Path
 from statistics import mean
 from typing import List, Dict, Tuple, Optional
 
-from data_models import CameraModel, PitchModel, Detections
-from triangulation.homography_estimator import HomographyEstimator
+from data_models import CameraModel, PitchModel, Detections, TriangulationResult
+from homography.homography_estimator import HomographyEstimator
 
 OPTICAL_FLOW_MULTIPLIER = 5
 
@@ -70,12 +71,24 @@ class MultiCameraTracker:
         self.consecutive_non_detections = 0
         self.max_consecutive_misses = 5
 
+        self.longest_perpendicular_distance_when_z_is_above_one: int = 8
+        self.longest_perpendicular_distance_when_z_is_below_one: int = 6
+        self.min_z_value_for_triangulation_result: int = -2
+        self.max_z_value_for_triangulation_result: float = 9.5  # In case two close cameras on the same side have two detections that oppose each other (they'll have a very close perpendicular line, but high z)
+
         self.latest_camera_id: Optional[str] = None  # Last camera to detect a ball
         self.last_triangulated_position: Optional[Detections] = None
         self.optical_flow_used: bool = False  # Bool to help with resetting the Kalman filter
 
         self.camera_coords_json_path = camera_coords_json_path
         assert os.path.exists(self.camera_coords_json_path), f"File not found: {self.camera_coords_json_path}"
+
+        # Two+ camera detections attributes
+        self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame: bool = False
+        self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras: Optional[Detections] = None
+        self.buffer_radius: int = 25
+        self.acceptable_time_frame_for_single_cam_det_after_two_or_more_cam_dets: int = 50  # accept single cam dets in the same area for 50 frames
+        self.multi_camera_det_counter: int = 0  # Counter for how many frames since the ball was last detected by two or more cameras
 
         self._instantiate_cameras()
 
@@ -148,6 +161,21 @@ class MultiCameraTracker:
 
         return filtered_dets
 
+    def _filter_triangulation_result(self, result: TriangulationResult) -> Optional[Tuple[float, float, float]]:
+        if result.z < self.min_z_value_for_triangulation_result:
+            return None
+        if result.z > self.max_z_value_for_triangulation_result:
+            return None
+
+        if result.z >= 1:
+            if result.shortest_perpendicular_distance <= self.longest_perpendicular_distance_when_z_is_above_one:
+                return result.x, result.y, result.z
+        else:  # result.z < 1
+            if result.shortest_perpendicular_distance <= self.longest_perpendicular_distance_when_z_is_below_one:
+                return result.x, result.y, result.z
+
+        return None
+
     def _apply_homography_transformation(self, camera_id: str, x: float, y: float) -> Tuple[float, float]:
         """
         Applies a homography transformation to a set of coordinates.
@@ -203,9 +231,21 @@ class MultiCameraTracker:
         # else:
         #     # Just return the detection as is.
         #     return _detections#
+
+        # TODO: note that this should only be receiving a single det (its one camera!)!!!
+        #  This needs refactoring
+        for det in _detections:
+            # Check if its within the buffer radius of the last triangulated position
+            if self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras:
+                # Get the euclidean distance in x and y between the two points
+                euclidean_distance = np.linalg.norm(np.array([det.x, det.y]) - np.array([self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras.x, self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras.y]))
+                if euclidean_distance <= self.buffer_radius:
+                    return det
+                else:
+                    return None
         return _detections[0]
 
-    def n_camera_triangulation(self, _detections: List[Detections]) -> Detections:
+    def n_camera_triangulation(self, _detections: List[Detections]) -> Optional[Detections]:
         # Ensure there are more than two detections
         if len(_detections) < 2:
             raise ValueError("At least three camera detections are required for n-camera triangulation")
@@ -216,26 +256,42 @@ class MultiCameraTracker:
             for j in range(i + 1, len(_detections)):
                 camera_i_coords = self._camera_coords_to_np_array(_detections[i].camera_id)
                 camera_j_coords = self._camera_coords_to_np_array(_detections[j].camera_id)
-                x, y, z = self.triangulate(_detections[i], camera_i_coords, _detections[j], camera_j_coords)
-                triangulation_points.append(np.array([x, y, z]))
+                print(_detections[i], camera_i_coords, _detections[j], camera_j_coords, "\n")
+                triangulation_result = self.triangulate(_detections[i], camera_i_coords, _detections[j], camera_j_coords)
+                filtered_triangulation_result = self._filter_triangulation_result(triangulation_result)
+                if filtered_triangulation_result:
+                    print(f"filtered_triangulation_result: {filtered_triangulation_result}")
+                    self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
+                    self.multi_camera_det_counter = 0
+                    triangulation_points.append(np.array([filtered_triangulation_result[0], filtered_triangulation_result[1], filtered_triangulation_result[2]]))
 
         # Calculate the centroid of all triangulation points
-        if not triangulation_points:  # Check if the list is not empty
-            raise ValueError("No triangulation points were calculated")
+        if not triangulation_points:
+            return None
+
         final_position = np.mean(triangulation_points, axis=0)
 
         averaged_det = Detections(camera_id=0, x=final_position[0], y=final_position[1], z=final_position[2])
+
+        if self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras:
+            self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras = deepcopy(averaged_det)
         return averaged_det
 
-    def two_camera_triangulation(self, _detections: List[Detections]) -> Detections:
+    def two_camera_triangulation(self, _detections: List[Detections]) -> Optional[Detections]:
         self.plane = None  # destroy the plane
 
         camera1_coords = self._camera_coords_to_np_array(_detections[0].camera_id)
         camera2_coords = self._camera_coords_to_np_array(_detections[1].camera_id)
 
-        x, y, z = self.triangulate(_detections[0], camera1_coords, _detections[1], camera2_coords)
-        det = Detections(camera_id=0, x=x, y=y, z=z)
-        return det
+        triangulation_result = self.triangulate(_detections[0], camera1_coords, _detections[1], camera2_coords)
+        filtered_triangulation_result = self._filter_triangulation_result(triangulation_result)
+        if filtered_triangulation_result:
+            self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
+            self.multi_camera_det_counter = 0
+            three_d_det = Detections(camera_id=0, x=filtered_triangulation_result[0], y=filtered_triangulation_result[1], z=filtered_triangulation_result[2])
+            self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras = deepcopy(three_d_det)
+            return three_d_det
+        return None
 
     def _set_latest_camera_id(self, _detections: List[Detections]) -> None:
         if len(_detections) > 0:
@@ -298,12 +354,11 @@ class MultiCameraTracker:
                     triangulated_det = self._apply_optical_flow_to_ball(average_flow)  # Only use when no detections are found
                     self.optical_flow_used = True
                 else:
-                    # This is when optical flow has been used more than 10 frames consecutively which we don't want
+
                     triangulated_det = None
                     self.optical_flow_used = False
         else:
             if self.optical_flow_used:
-                # self.kalman_filter = KalmanFilter(np.zeros(3), np.eye(3) * 0.01, np.eye(3) * 0.1)  # Reset the Kalman filter
                 self.optical_flow_used = False
             if len(cam_list) == 1:
                 triangulated_det = self.one_camera_triangulation(_detections)
@@ -316,11 +371,20 @@ class MultiCameraTracker:
 
             self.consecutive_detections += 1
 
+            # Reset the bool which tracks if the ball has been detected by 2+ cameras within the last while.
+            if self.multi_camera_det_counter >= self.acceptable_time_frame_for_single_cam_det_after_two_or_more_cam_dets:
+                self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = False
+
+            # Increment the counter for how many frames since the ball was last detected by two or more cameras
+            if self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame:
+                self.multi_camera_det_counter += 1
+
             if self.consecutive_detections >= 2:
                 self.kalman_filter.predict()
                 self.kalman_filter.update(np.array([triangulated_det.x, triangulated_det.y, triangulated_det.z]))
                 triangulated_det.x, triangulated_det.y, triangulated_det.z = self.kalman_filter.state
             else:
+                # TODO: I'm not sure if this is right... immediately resetting the Kalman filter on a first new detection...
                 self.kalman_filter.reset(np.array([triangulated_det.x, triangulated_det.y, triangulated_det.z]))
 
             self.consecutive_non_detections = 0
@@ -330,13 +394,13 @@ class MultiCameraTracker:
             self.consecutive_detections = 0
             self.consecutive_non_detections += 1
             if self.consecutive_non_detections >= self.max_consecutive_misses:  # Reset the kalman filter after 3 misses
+                # TODO: I think this is misleading
+                #  How does optical flow effect when this gets called?
                 self.kalman_filter.reset(np.zeros(3))  # Reset the Kalman filter
             return None
 
-
-
     @staticmethod
-    def triangulate(ball_p: Detections, cam_p: np.ndarray, ball_q: Detections, cam_q: np.ndarray) -> Tuple[float, float, float]:
+    def triangulate(ball_p: Detections, cam_p: np.ndarray, ball_q: Detections, cam_q: np.ndarray) -> TriangulationResult:
         """
         Performs mid-point triangulation based on the positions of a ball from two different camera perspectives.
 
@@ -356,9 +420,9 @@ class MultiCameraTracker:
         """
         # Convert Detections to numpy arrays
         XA0 = np.array([ball_p.x, ball_p.y, ball_p.z], dtype=float)
-        XA1 = np.array([ball_p.x, ball_p.y, ball_p.z], dtype=float)
+        XA1 = np.squeeze(cam_p)
         XB0 = np.array([ball_q.x, ball_q.y, ball_q.z], dtype=float)
-        XB1 = np.array([ball_q.x, ball_q.y, ball_q.z], dtype=float)
+        XB1 = np.squeeze(cam_q)
 
         # Calculate direction vectors for each line
         VA = XA1 - XA0  # V1
@@ -382,10 +446,21 @@ class MultiCameraTracker:
         closest_point_on_A = XA0 + t1 * VA  # Q1 = P1 + t1V1
         closest_point_on_B = XB0 + t2 * VB  # Q2 = P2 + t2V2
 
+        distance_between_A_and_B = np.linalg.norm(closest_point_on_A - closest_point_on_B)
+
+        # print(f"closest_point_on_A: {closest_point_on_A}")
+        # print(f"closest_point_on_B: {closest_point_on_B}")
+        print(f"distance_between_A_and_B: {distance_between_A_and_B}")
+
         # Calculate the midpoint between the closest points
         midpoint = (closest_point_on_A + closest_point_on_B) / 2
 
-        return midpoint[0].item(), midpoint[1].item(), midpoint[2].item()
+        return TriangulationResult(
+            x=midpoint[0].item(),
+            y=midpoint[1].item(),
+            z=midpoint[2].item(),
+            shortest_perpendicular_distance=distance_between_A_and_B
+        )
 
 
 def main():
