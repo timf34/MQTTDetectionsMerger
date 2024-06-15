@@ -39,7 +39,7 @@ class PitchModel:
     def __init__(self, sport: str):
         if sport.lower() == "afl":
             print("Using AFL Pitch model...")
-            self.pitch_dimensions_path = "./triangulation/triangulation_data/afl_real_world_pitch_coordinates_normalized.json"
+            self.pitch_dimensions_path = "../data/homography_data/afl_real_world_pitch_coordinates_normalized.json"
         else:  # Football (soccer)
             print("Using Football (soccer) Pitch model...")
             self.pitch_dimensions_path = "../data/homography_data/real_world_pitch_dimensions.json"
@@ -61,6 +61,14 @@ class Detections:
     x: float = 0
     y: float = 0
     z: float = 1  # Set to 1 for homography normalisation for now
+
+
+@dataclass
+class TriangulationResult:
+    x: float
+    y: float
+    z: float
+    shortest_perpendicular_distance: float  # Shortest distance between the two skew lines from the triangulation algo
 
 
 class Camera(NamedTuple):
