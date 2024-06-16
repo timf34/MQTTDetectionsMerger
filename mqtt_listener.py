@@ -113,8 +113,6 @@ def send_detections_periodically():
         detections_to_send = []
         vector_flows_to_send: List[Union[Dict[str, np.ndarray], None]] = []
 
-        print("we in here")
-
         for camera_id, detection in detections_buffer.items():
             if current_time - detection.timestamp <= 0.4:  # Check if detection is within 1/4 second + 0.15 seconds for latency between cameras and server (I need to measure the average latency here for this)
                 detections_to_send.append(detection)
@@ -123,25 +121,25 @@ def send_detections_periodically():
             if current_time - flow_vector["timestamp"] <= 0.4:
                 vector_flows_to_send.append(flow_vector)
 
-        time_moment = int(time())
-        print(time_moment)
+        # time_moment = int(time())
+        # print(time_moment)
 
-        if time_moment % 2 == 0:
-            detections_to_send.append(
-                Detections(camera_id=1, x=1027, y=844, z=1.0, probability=0.98, timestamp=time())
-            )
+        # if time_moment % 2 == 0:
+        #     detections_to_send.append(
+        #         Detections(camera_id=1, x=1027, y=844, z=1.0, probability=0.98, timestamp=time())
+        #     )
         # else:
         #     detections_to_send.append(
         #         Detections(camera_id=6, x=964, y=801, z=1.0, probability=0.98, timestamp=time())
         # )
 
-        if time_moment % 3 == 0:
-            vector_flows_to_send.append(
-                {"camera_id": 2, "flow_vector": np.array([0.3, 0.2])}
-            )
-
-        print("detections to sends: ", detections_to_send)
-        print("vector flows to send: ", vector_flows_to_send)
+        # if time_moment % 3 == 0:
+        #     vector_flows_to_send.append(
+        #         {"camera_id": 2, "flow_vector": np.array([0.3, 0.2])}
+        #     )
+        #
+        # print("detections to sends: ", detections_to_send)
+        # print("vector flows to send: ", vector_flows_to_send)
 
         if detections_to_send and vector_flows_to_send:
             log_entry = {
