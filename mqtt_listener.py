@@ -142,6 +142,7 @@ def send_detections_periodically():
         # print("vector flows to send: ", vector_flows_to_send)
 
         if detections_to_send and vector_flows_to_send:
+
             log_entry = {
                 "type": "detections_to_send",
                 "detections": [d.__dict__ for d in detections_to_send],
@@ -150,7 +151,7 @@ def send_detections_periodically():
             logger.info(json.dumps(log_entry))
 
             three_d_point = tracker.multi_camera_analysis(detections_to_send, vector_flows_to_send)
-            print(three_d_point)
+            print("three d point: ", three_d_point)
 
             if three_d_point is not None:
 
