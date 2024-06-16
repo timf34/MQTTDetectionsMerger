@@ -186,6 +186,7 @@ def send_detections_periodically():
                     "timestamp": time()
                 }
                 logger.info(json.dumps(log_entry))
+                print("sending: ", log_entry, "\n")
                 iot_manager.publish(payload=json.dumps(mqtt_message))
 
         sleep(1 / 6)  # Wait for 1/6 seconds
