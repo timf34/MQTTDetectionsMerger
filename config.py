@@ -2,6 +2,7 @@ import os
 
 USE_OMAR_CERTS: bool = True
 
+
 class MQTTMergerConfig:
     def __init__(self):
 
