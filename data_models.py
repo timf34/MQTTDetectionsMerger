@@ -39,10 +39,10 @@ class PitchModel:
     def __init__(self, sport: str):
         if sport.lower() == "afl":
             print("Using AFL Pitch model...")
-            self.pitch_dimensions_path = "../data/homography_data/afl_real_world_pitch_coordinates_normalized.json"
+            self.pitch_dimensions_path = "./triangulation/triangulation_data/afl_real_world_pitch_coordinates_normalized.json"
         else:  # Football (soccer)
             print("Using Football (soccer) Pitch model...")
-            self.pitch_dimensions_path = "../data/homography_data/real_world_pitch_dimensions.json"
+            self.pitch_dimensions_path = "./triangulation/triangulation_data/real_world_pitch_dimensions.json"
 
         self.pitch_dimensions = self.load_pitch_dimensions()
 
