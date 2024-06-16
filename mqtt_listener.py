@@ -1,20 +1,24 @@
 import json
+import numpy as np
 import os
 import threading
 import logging
 from dataclasses import asdict
 from logging import Formatter, FileHandler
 from time import time, sleep
+from typing import Optional, Dict, List, Union
 
 from aws_iot.IOTClient import IOTClient
 from aws_iot.IOTContext import IOTContext, IOTCredentials
 from config import MQTTMergerConfig
+from data_models import Detections
 from triangulation.triangulation_logic import MultiCameraTracker
 from utils import convert_dicts_to_detections
 
 # TODO: Need to measure average latency between cameras and this MQTT channel. It's important for
-# filtering out older detections (see below)
+#  filtering out older detections (see below)
 
+# TODO: generally needs to ensure the timing mechanisms in send_detections_periodically is correct
 
 # TODO: Remove all the backslashes from the log messages.
 
@@ -24,6 +28,7 @@ elapsed_time = 0
 received_message: str = ""
 received_all_event = threading.Event()
 detections_buffer = {}
+flow_vector_buffer: Dict[int, Optional[np.ndarray]] = {}
 
 config = MQTTMergerConfig()
 
@@ -87,11 +92,16 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     logger.info(json.dumps(log_entry))
 
     received_message_json = json.loads(received_message)
-    detection_list = received_message_json["message"]
+
+    detection_list = received_message_json["detections"]
     detection_list = convert_dicts_to_detections(detection_list)
 
     for detection in detection_list:
         detections_buffer[detection.camera_id] = detection
+
+    optical_flow_vector = received_message_json["optical_flow"]
+    if optical_flow_vector:
+        flow_vector_buffer[optical_flow_vector["camera_id"]] = np.array(optical_flow_vector["flow_vector"])
 
     if received_count == NUM_MESSAGES:
         received_all_event.set()
@@ -101,21 +111,39 @@ def send_detections_periodically():
     while not received_all_event.is_set():
         current_time = time()
         detections_to_send = []
+        vector_flows_to_send: List[Union[Dict[str, np.ndarray], None]] = []
+
+        print("we in here")
 
         for camera_id, detection in detections_buffer.items():
-            if current_time - detection.timestamp <= 0.35:  # Check if detection is within 1/4 second + 0.15 seconds for latency between cameras and server (I need to measure the average latency here for this)
+            if current_time - detection.timestamp <= 0.4:  # Check if detection is within 1/4 second + 0.15 seconds for latency between cameras and server (I need to measure the average latency here for this)
                 detections_to_send.append(detection)
 
-        # if time() % 2 == 0:
-        #     detections_to_send.append(
-        #         Detections(camera_id=1, x=1027, y=844, z=1.0, probability=0.98, timestamp=time())
-        #     )
+        for camera_id, flow_vector in flow_vector_buffer.items():
+            if current_time - flow_vector["timestamp"] <= 0.4:
+                vector_flows_to_send.append(flow_vector)
+
+        time_moment = int(time())
+        print(time_moment)
+
+        if time_moment % 2 == 0:
+            detections_to_send.append(
+                Detections(camera_id=1, x=1027, y=844, z=1.0, probability=0.98, timestamp=time())
+            )
         # else:
         #     detections_to_send.append(
         #         Detections(camera_id=6, x=964, y=801, z=1.0, probability=0.98, timestamp=time())
         # )
 
-        if detections_to_send:
+        if time_moment % 3 == 0:
+            vector_flows_to_send.append(
+                {"camera_id": 2, "flow_vector": np.array([0.3, 0.2])}
+            )
+
+        print("detections to sends: ", detections_to_send)
+        print("vector flows to send: ", vector_flows_to_send)
+
+        if detections_to_send and vector_flows_to_send:
             log_entry = {
                 "type": "detections_to_send",
                 "detections": [d.__dict__ for d in detections_to_send],
@@ -123,7 +151,9 @@ def send_detections_periodically():
             }
             logger.info(json.dumps(log_entry))
 
-            three_d_point = tracker.multi_camera_analysis(detections_to_send, {})
+            three_d_point = tracker.multi_camera_analysis(detections_to_send, vector_flows_to_send)
+            print(three_d_point)
+
             if three_d_point is not None:
 
                 # Converting to normalized coordinates for the device
@@ -131,10 +161,11 @@ def send_detections_periodically():
                 normalized_y = min(three_d_point.y, 128.8)
 
                 normalized_x = normalized_x / 159.5
-                normalized_x *= 102
+                normalized_x *= 10
 
                 normalized_y = normalized_y / 128.8
                 normalized_y *= 65
+                normalized_y = 65 - normalized_y  # Invert the y-axis
 
                 mqtt_message = {
                   "T": 0,
