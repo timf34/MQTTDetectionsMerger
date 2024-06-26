@@ -113,7 +113,9 @@ class IOTClient:
     @staticmethod
     def _on_conn_interrupted(connection, error, **kwargs):
         # Reconnect
-        # TODO: need to handle this better!
+        # TODO: At the moment, when this is raised, the code continues as normal, which is not the desired behaviour
+        #  as its not clear that things will not be working (messages are not getting sent!)
+        #  We also have no 'reconnection' code implemented
         raise ConnectionError("Connection interrupted. Ensure client ID isn't beind used elsewhere. Reconnecting...")
 
 
