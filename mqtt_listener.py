@@ -75,6 +75,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     received_count += 1
     received_message = payload
+    print("Received message: ", received_message)
 
     end_time = time()
     elapsed_time = end_time - start_time
@@ -91,6 +92,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     logger.info(json.dumps(log_entry))
 
     received_message_json = json.loads(received_message)
+    print(received_message_json)
 
     detection_list = received_message_json["detections"]
     detection_list = convert_dicts_to_detections(detection_list)
@@ -111,7 +113,6 @@ def send_detections_periodically():
     print("send_detections_periodically started")
     print(received_all_event.is_set())
     while not received_all_event.is_set():
-        print("made it in")
         current_time = time()
         detections_to_send = []
         vector_flows_to_send: List[Union[Dict[str, np.ndarray], None]] = []
@@ -120,7 +121,6 @@ def send_detections_periodically():
             if current_time - detection.timestamp <= 0.4:  # Check if detection is within 1/4 second + 0.15 seconds for latency between cameras and server (I need to measure the average latency here for this)
                 detections_to_send.append(detection)
 
-        print("after dets buffer loop")
         for camera_id, flow_vector in flow_vector_buffer.items():
             if flow_vector:
                 if current_time - flow_vector["timestamp"] <= 0.4:
@@ -130,10 +130,7 @@ def send_detections_periodically():
 
                     # vector_flows_to_send.append(flow_vector["flow_vector"])
 
-        print("after flow vector loop")
-        # Temp removal of testing code
 
-        print("we in here")
         if detections_to_send or vector_flows_to_send:
             print("and in here")
             log_entry = {
