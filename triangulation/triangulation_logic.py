@@ -350,7 +350,8 @@ class MultiCameraTracker:
             triangulated_det = None
             # Check if all values in average_flow are not None
             print("avg flow", average_flow)
-            average_flow = average_flow[0]
+            if len(average_flow) > 0:
+                average_flow = average_flow[0]
             if not all(value is None for value in average_flow.values()):  # TODO: Note I don't think they all need to be None in practice...
                 # TODO: changed this from marveln to "n"
                 # TODO: this requires attention - why do we need the latest camera id here... are we setting it properly too

@@ -75,7 +75,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     received_count += 1
     received_message = payload
-    print("Received message: ", received_message)
+    print("received_message: ", received_message)
 
     end_time = time()
     elapsed_time = end_time - start_time
@@ -89,15 +89,17 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
         "message": received_message,
         "timestamp": elapsed_time
     }
-    logger.info(json.dumps(log_entry))
+    # logger.info(json.dumps(log_entry))
 
     received_message_json = json.loads(received_message)
-    print(received_message_json)
 
     detection_list = received_message_json["detections"]
     detection_list = convert_dicts_to_detections(detection_list)
 
     for detection in detection_list:
+        # TODO: this is a bit of a mistake... the last detection then is the one that will be stored in the buffer,
+        #  and not the most confident one
+        #  Come back to this
         detections_buffer[detection.camera_id] = detection
 
     optical_flow_vector = received_message_json["optical_flow"]
@@ -110,26 +112,21 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
 # TODO: as this is in a thread, errors don't stop things!
 def send_detections_periodically():
-    print("send_detections_periodically started")
     print(received_all_event.is_set())
     while not received_all_event.is_set():
         current_time = time()
         detections_to_send = []
-        vector_flows_to_send: List[Union[Dict[str, np.ndarray], None]] = []
+        vector_flows_to_send: Dict[str, Optional[np.ndarray]] = {}  # This should obviously match what's passed to the triangulation code
 
         for camera_id, detection in detections_buffer.items():
-            if current_time - detection.timestamp <= 0.4:  # Check if detection is within 1/4 second + 0.15 seconds for latency between cameras and server (I need to measure the average latency here for this)
+            # TODO: Change this back to 0.4 seconds for production
+            if current_time - detection.timestamp <= 0.6:
                 detections_to_send.append(detection)
 
         for camera_id, flow_vector in flow_vector_buffer.items():
             if flow_vector:
                 if current_time - flow_vector["timestamp"] <= 0.4:
-                    # We need to append the flow vector as {camera_id: flow_vector}
-                    vector_flows_to_send.append({camera_id: flow_vector["flow_vector"]})
-
-
-                    # vector_flows_to_send.append(flow_vector["flow_vector"])
-
+                    vector_flows_to_send[camera_id] = flow_vector["flow_vector"]
 
         if detections_to_send or vector_flows_to_send:
             print("and in here")
@@ -138,7 +135,7 @@ def send_detections_periodically():
                 "detections": [d.__dict__ for d in detections_to_send],
                 "timestamp": current_time
             }
-            logger.info(json.dumps(log_entry))
+            # logger.info(json.dumps(log_entry))
 
             three_d_point = tracker.multi_camera_analysis(detections_to_send, vector_flows_to_send)
             print("three d point: ", three_d_point)
@@ -165,7 +162,6 @@ def send_detections_periodically():
                   "G": 0,
                   "O": 0
                 }
-                # TODO: Need to test these
                 log_message = {
                     "mqtt_message": mqtt_message,
                     "three_d_point": asdict(three_d_point),
@@ -175,7 +171,8 @@ def send_detections_periodically():
                     "message": log_message,
                     "timestamp": time()
                 }
-                logger.info(json.dumps(log_entry))
+                # logger.info(json.dumps(log_entry))
+                print(mqtt_message)
                 print("sending: ", log_entry, "\n")
                 iot_manager.publish(payload=json.dumps(mqtt_message))
 
@@ -183,6 +180,9 @@ def send_detections_periodically():
 
 
 if __name__ == "__main__":
+    print("Change the detections buffer back to 0.4 seconds for production!")
+    sleep(3)
+
     cwd = os.getcwd()
 
     iot_context = IOTContext()
