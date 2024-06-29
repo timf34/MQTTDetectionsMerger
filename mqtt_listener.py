@@ -3,6 +3,7 @@ import numpy as np
 import os
 import threading
 import logging
+from copy import deepcopy
 from dataclasses import asdict
 from logging import Formatter, FileHandler
 from time import time, sleep
@@ -91,7 +92,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     received_message_json = json.loads(received_message)
 
-    if received_message_json.get("detections") is not "[]":
+    if received_message_json.get("detections") != []:
         print("detections: ", received_message_json.get("detections"))
 
 
@@ -131,7 +132,8 @@ def send_detections_periodically():
             }
             # logger.info(json.dumps(log_entry))
 
-            three_d_point = tracker.multi_camera_analysis(detections_to_send, {})
+            # Dets in the detections buffer get adjusted sometimes if we don't use deepcopy here
+            three_d_point = tracker.multi_camera_analysis(deepcopy(detections_to_send), {})
             print("three d point: ", three_d_point)
 
             if three_d_point is not None:
