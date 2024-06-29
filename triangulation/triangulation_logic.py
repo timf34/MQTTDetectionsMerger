@@ -76,8 +76,7 @@ class MultiCameraTracker:
         self.min_z_value_for_triangulation_result: int = -2
         self.max_z_value_for_triangulation_result: float = 9.5  # In case two close cameras on the same side have two detections that oppose each other (they'll have a very close perpendicular line, but high z)
 
-        # TODO temp setting this to 1 for optical flow code
-        self.latest_camera_id: Optional[str] = 1  # Last camera to detect a ball
+        self.latest_camera_id: Optional[str] = None  # Last camera to detect a ball
         self.last_triangulated_position: Optional[Detections] = None
         self.optical_flow_used: bool = False  # Bool to help with resetting the Kalman filter
 
@@ -349,17 +348,15 @@ class MultiCameraTracker:
         if len(cam_list) == 0:
             triangulated_det = None
             # Check if all values in average_flow are not None
-            print("avg flow", average_flow)
-            if len(average_flow) > 0:
-                average_flow = average_flow[0]
             if not all(value is None for value in average_flow.values()):  # TODO: Note I don't think they all need to be None in practice...
-                # TODO: changed this from marveln to "n"
-                # TODO: this requires attention - why do we need the latest camera id here... are we setting it properly too
                 if average_flow.get(f"{self.latest_camera_id}") is not None:
+                    print("!")
                     print("Apply optical flow value to the triangulated position")
+                    print("!")
                     triangulated_det = self._apply_optical_flow_to_ball(average_flow)  # Only use when no detections are found
                     self.optical_flow_used = True
                 else:
+
                     triangulated_det = None
                     self.optical_flow_used = False
         else:
