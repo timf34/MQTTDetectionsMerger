@@ -100,6 +100,8 @@ class MultiCameraTracker:
         self.add_camera(camera_name="marvel6", match_date="19-08-2023")
         self.add_camera(camera_name="marvel7", match_date="27-08-2023")
         self.add_camera(camera_name="marvel8", match_date="27-08-2023")
+        self.add_camera(camera_name="marvel9", match_date="27-08-2023")
+        self.add_camera(camera_name="marvel10", match_date="27-08-2023")
 
     @staticmethod
     def calculate_midpoint(x1: float, y1: float, x2: float, y2: float) -> Tuple[float, float]:

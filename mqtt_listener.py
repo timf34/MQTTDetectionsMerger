@@ -75,13 +75,15 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     received_count += 1
     received_message = payload
-    print("received_message: ", received_message)
+    # print("received_message: ", received_message)
+
 
     end_time = time()
     elapsed_time = end_time - start_time
 
     if isinstance(received_message, bytes) and received_message != '':
         received_message = received_message.decode("utf-8")
+
 
     # Log the received message and timestamp
     log_entry = {
@@ -92,6 +94,10 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     # logger.info(json.dumps(log_entry))
 
     received_message_json = json.loads(received_message)
+
+    if received_message_json.get("detections") is not []:
+        print("detections: ", received_message_json.get("detections"))
+
 
     detection_list = received_message_json["detections"]
     detection_list = convert_dicts_to_detections(detection_list)
@@ -120,8 +126,11 @@ def send_detections_periodically():
 
         for camera_id, detection in detections_buffer.items():
             # TODO: Change this back to 0.4 seconds for production
-            if current_time - detection.timestamp <= 0.38:
+            if current_time - detection.timestamp <= 0.8:
                 detections_to_send.append(detection)
+
+        print("\n buffer: ", detections_to_send)
+        print(current_time)
 
         for camera_id, flow_vector in flow_vector_buffer.items():
             if flow_vector:
@@ -146,10 +155,12 @@ def send_detections_periodically():
                 normalized_y = min(three_d_point.y, 128.8)
 
                 normalized_x = normalized_x / 159.5
+                # normalized_x *= 159.5
                 normalized_x *= 102
 
                 # normalized_y = 128.8 - normalized_y
                 normalized_y = normalized_y / 128.8
+                # normalized_y *= 128.8
                 normalized_y *= 65
 
                 mqtt_message = {
@@ -188,7 +199,7 @@ if __name__ == "__main__":
 
     iot_credentials = IOTCredentials(
         cert_path=config.cert_path,
-        client_id="mergerReceiveMessages",
+        client_id="mergerReceiveMessagesxxx",
         endpoint=config.endpoint,
         region="ap-southeast-2",
         priv_key_path=config.private_key_path,

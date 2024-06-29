@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, NamedTuple
@@ -12,7 +13,13 @@ class CameraModel:
             assert "marvel" in camera_name.lower(), "Camera name must start with 'marvel' for AFL."
 
         self.name: str = camera_name.lower()
-        self.id: int = int(camera_name[-1])
+
+        numbers = re.findall(r'\d+', camera_name)
+        if numbers:
+            self.id: int = int(numbers[-1])  # Convert the last group of digits found to an integer
+        else:
+            raise ValueError("No numeric ID found in the camera name.")
+
         self.date = match_date
         self.pitch_pixel_coords_path = camera_coords_json_path
         assert os.path.exists(self.pitch_pixel_coords_path), f"File not found: {self.pitch_pixel_coords_path}"
