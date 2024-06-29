@@ -120,7 +120,7 @@ def send_detections_periodically():
 
         for camera_id, detection in detections_buffer.items():
             # TODO: Change this back to 0.4 seconds for production
-            if current_time - detection.timestamp <= 0.6:
+            if current_time - detection.timestamp <= 0.38:
                 detections_to_send.append(detection)
 
         for camera_id, flow_vector in flow_vector_buffer.items():
@@ -129,7 +129,6 @@ def send_detections_periodically():
                     vector_flows_to_send[camera_id] = flow_vector["flow_vector"]
 
         if detections_to_send or vector_flows_to_send:
-            print("and in here")
             log_entry = {
                 "type": "detections_to_send",
                 "detections": [d.__dict__ for d in detections_to_send],
