@@ -71,12 +71,8 @@ logger.addHandler(file_handler)
 def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     global received_count, received_message, elapsed_time, detections_buffer
 
-    # print(f"Received message from topic '{topic}' at {time()}: {payload}")
-
     received_count += 1
     received_message = payload
-    # print("received_message: ", received_message)
-
 
     end_time = time()
     elapsed_time = end_time - start_time
