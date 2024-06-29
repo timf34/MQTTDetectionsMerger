@@ -1,4 +1,5 @@
 awscrt
 awsiot
 awsiotsdk
+matplotlib
 typing
