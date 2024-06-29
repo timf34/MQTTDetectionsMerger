@@ -34,7 +34,7 @@ config = MQTTMergerConfig()
 
 tracker = MultiCameraTracker(
     sport="afl",
-    camera_coords_json_path="./triangulation/triangulation_data/afl_camera_coordinates.json"
+    camera_coords_json_path="./data/afl_camera_coordinates.json"
 )
 
 start_time = time()
@@ -91,7 +91,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     received_message_json = json.loads(received_message)
 
-    if received_message_json.get("detections") is not []:
+    if received_message_json.get("detections") is not "[]":
         print("detections: ", received_message_json.get("detections"))
 
 
@@ -104,10 +104,6 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
         #  Come back to this
         detections_buffer[detection.camera_id] = detection
 
-    optical_flow_vector = received_message_json["optical_flow"]
-    if optical_flow_vector:
-        flow_vector_buffer[optical_flow_vector["camera_id"]] = {"flow_vector": np.array(optical_flow_vector["flow_vector"]), "timestamp": optical_flow_vector["timestamp"]}
-
     if received_count == NUM_MESSAGES:
         received_all_event.set()
 
@@ -118,7 +114,6 @@ def send_detections_periodically():
     while not received_all_event.is_set():
         current_time = time()
         detections_to_send = []
-        vector_flows_to_send: Dict[str, Optional[np.ndarray]] = {}  # This should obviously match what's passed to the triangulation code
 
         for camera_id, detection in detections_buffer.items():
             # TODO: Change this back to 0.4 seconds for production
@@ -128,12 +123,7 @@ def send_detections_periodically():
         print("\n buffer: ", detections_to_send)
         print(current_time)
 
-        for camera_id, flow_vector in flow_vector_buffer.items():
-            if flow_vector:
-                if current_time - flow_vector["timestamp"] <= 0.4:
-                    vector_flows_to_send[camera_id] = flow_vector["flow_vector"]
-
-        if detections_to_send or vector_flows_to_send:
+        if detections_to_send:
             log_entry = {
                 "type": "detections_to_send",
                 "detections": [d.__dict__ for d in detections_to_send],
@@ -154,7 +144,7 @@ def send_detections_periodically():
                 # normalized_x *= 159.5
                 normalized_x *= 102
 
-                # normalized_y = 128.8 - normalized_y
+                normalized_y = 128.8 - normalized_y
                 normalized_y = normalized_y / 128.8
                 # normalized_y *= 128.8
                 normalized_y *= 65
@@ -179,7 +169,7 @@ def send_detections_periodically():
                 }
                 # logger.info(json.dumps(log_entry))
                 print(mqtt_message)
-                print("sending: ", log_entry, "\n")
+                print("sending: ", log_message, "\n")
                 iot_manager.publish(payload=json.dumps(mqtt_message))
 
         sleep(1 / 6)  # Wait for 1/6 seconds
