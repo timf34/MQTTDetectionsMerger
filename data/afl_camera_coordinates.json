@@ -271,6 +271,72 @@
                 }
             },
             "default_image_field_coordinates": [[260, 0], [1225, 154], [1379, 254], [1499, 354], [1600, 482], [1590, 677], [1387, 874], [950, 1080], [0, 1080], [0, 0], [260, 0]]
+        },
+        "marvel9": {
+            "location": "Marvel Stadium, Melbourne",
+            "dates": {
+                "27-08-2023": {
+                    "pitch_pixel_coords": {
+                        "BehindPost1": [1336, 238],
+                        "BehindPost2": [1170, 132],
+                        "GoalPost1": [1274, 199],
+                        "GoalPost2": [1222, 165],
+                        "GoalSquare1": [1204, 190],
+                        "GoalSquare2": [1148, 153],
+                        "Arc1Point1": [1581, 517],
+                        "Arc1Centre": [],
+                        "Arc1Point2": [],
+                        "SquareCorner1": [886, 302],
+                        "SquareCorner3": [],
+                        "SquareCorner4": [],
+                        "CirclesCentre": [246, 69],
+                        "BigCircleLine1": [271, 105],
+                        "BigCircleLine2": [224, 38],
+                        "EastSquareMidpoint": [399, 289],
+                        "EastFieldMidpoint": [920, 1044]
+                    },
+                    "camera_coords": {
+                        "real_world_x": 52.75,
+                        "real_world_y": -21.3,
+                        "real_world_z": 27.2
+                    },
+                    "image_field_coordinates": [[0, 0], [558, 0], [1200, 135], [1394, 262], [1567, 424], [1633, 613], [1577, 760], [1475, 886], [1140, 1080], [0, 1080], [0, 0]]
+                }
+            },
+            "default_image_field_coordinates": [[0, 0], [558, 0], [1195, 135], [1387, 262], [1567, 424], [1633, 613], [1577, 760], [1475, 886], [1140, 1080], [0, 1080], [0, 0]]
+        },
+        "marvel10": {
+            "location": "Marvel Stadium, Melbourne",
+            "dates": {
+                "27-08-2023": {
+                    "pitch_pixel_coords": {
+                        "BehindPost3": [1324, 105],
+                        "BehindPost4": [1492, 209],
+                        "GoalPost3": [1376, 136],
+                        "GoalPost4": [1430, 170],
+                        "GoalSquare3": [1300, 125],
+                        "GoalSquare4": [1355, 161],
+                        "Arc2Point1": [],
+                        "Arc2Centre": [],
+                        "Arc2Point2": [1735, 487],
+                        "SquareCorner1": [],
+                        "SquareCorner3": [1033, 278],
+                        "SquareCorner4": [],
+                        "CirclesCentre": [384, 63],
+                        "BigCircleLine1": [362, 34],
+                        "BigCircleLine2": [409, 97],
+                        "WestSquareMidpoint": [543, 275],
+                        "WestFieldMidpoint": [1095, 1012]
+                    },
+                    "camera_coords": {
+                        "real_world_x": 52.75,
+                        "real_world_y": -21.3,
+                        "real_world_z": 27.2
+                    },
+                    "image_field_coordinates": [[720, 0], [1350, 111], [1525, 221], [1662, 343], [1756, 455], [1779, 580], [1697, 740], [1514, 894], [1124, 1080], [0, 1080], [0, 0], [720, 0]]
+                }
+            },
+            "default_image_field_coordinates": [[720, 0], [1350, 111], [1525, 221], [1662, 343], [1756, 455], [1779, 580], [1697, 740], [1514, 894], [1124, 1080], [0, 1080], [0, 0], [720, 0]]
         }
     }
 }
