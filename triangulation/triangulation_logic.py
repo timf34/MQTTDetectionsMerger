@@ -143,6 +143,7 @@ class MultiCameraTracker:
         pitch_boundary: List[Tuple[int, int]] = self.cameras[camera_id].image_field_coordinates
         return Path(pitch_boundary)
 
+    # Note: the below func is no longer needed as we mask the pitch on the camera itself now
     def _remove_oob_detections(self, _dets: List[Detections]) -> List[Detections]:
         """
         Removes detections that are out of bounds of the pitch within the image frame.
@@ -336,7 +337,6 @@ class MultiCameraTracker:
         :return: The triangulated list of detections.
         """
         # TODO: removing temporarily as I don't have the image field coords set up for AFL yet.
-        _detections = self._remove_oob_detections(_detections)
         self._set_latest_camera_id(_detections)
 
         _detections = self._perform_homography(_detections)
