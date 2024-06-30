@@ -267,7 +267,7 @@ class MultiCameraTracker:
                 #     print(f"filtered_triangulation_result: {filtered_triangulation_result}")
                 #     self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
                 #     self.multi_camera_det_counter = 0
-                triangulation_points.append(np.array([filtered_triangulation_result[0], filtered_triangulation_result[1], filtered_triangulation_result[2]]))
+                triangulation_points.append(np.array([filtered_triangulation_result.x, filtered_triangulation_result.y, filtered_triangulation_result.z]))
 
         # Calculate the centroid of all triangulation points
         if not triangulation_points:
@@ -293,7 +293,7 @@ class MultiCameraTracker:
         # if filtered_triangulation_result:
         #     self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
         #     self.multi_camera_det_counter = 0
-        three_d_det = Detections(camera_id=0, x=filtered_triangulation_result[0], y=filtered_triangulation_result[1], z=filtered_triangulation_result[2])
+        three_d_det = Detections(camera_id=0, x=filtered_triangulation_result.x, y=filtered_triangulation_result.y, z=filtered_triangulation_result.z)
         # self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras = deepcopy(three_d_det)
         return three_d_det
 
