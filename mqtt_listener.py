@@ -46,7 +46,7 @@ logger.setLevel(logging.INFO)
 
 # Create a file handler
 cwd = os.getcwd()
-log_file = os.path.join(cwd, "detections.log")
+log_file = os.path.join(cwd, "detections_30_06_2024_y_axis_correct.log")
 file_handler = FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
@@ -88,7 +88,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
         "message": received_message,
         "timestamp": elapsed_time
     }
-    # logger.info(json.dumps(log_entry))
+    logger.info(json.dumps(log_entry))
 
     received_message_json = json.loads(received_message)
 
@@ -130,7 +130,7 @@ def send_detections_periodically():
                 "detections": [d.__dict__ for d in detections_to_send],
                 "timestamp": current_time
             }
-            # logger.info(json.dumps(log_entry))
+            logger.info(json.dumps(log_entry))
 
             # Dets in the detections buffer get adjusted sometimes if we don't use deepcopy here
             three_d_point = tracker.multi_camera_analysis(deepcopy(detections_to_send), {})
@@ -146,7 +146,7 @@ def send_detections_periodically():
                 # normalized_x *= 159.5
                 normalized_x *= 102
 
-                normalized_y = 128.8 - normalized_y
+                # normalized_y = 128.8 - normalized_y  # Keep commented out for correct visualisation on laptop at least
                 normalized_y = normalized_y / 128.8
                 # normalized_y *= 128.8
                 normalized_y *= 65
@@ -169,7 +169,7 @@ def send_detections_periodically():
                     "message": log_message,
                     "timestamp": time()
                 }
-                # logger.info(json.dumps(log_entry))
+                logger.info(json.dumps(log_entry))
                 print(mqtt_message)
                 print("sending: ", log_message, "\n")
                 iot_manager.publish(payload=json.dumps(mqtt_message))
