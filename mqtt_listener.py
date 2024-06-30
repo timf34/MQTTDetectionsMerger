@@ -158,7 +158,8 @@ def send_detections_periodically():
                   "P": 1,
                   "Pa": 0,
                   "G": 0,
-                  "O": 0
+                  "O": 0,
+                  "timestamp": time()
                 }
                 log_message = {
                     "mqtt_message": mqtt_message,
