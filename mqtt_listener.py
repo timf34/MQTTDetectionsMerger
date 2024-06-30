@@ -46,7 +46,7 @@ logger.setLevel(logging.INFO)
 
 # Create a file handler
 cwd = os.getcwd()
-log_file = os.path.join(cwd, "detections_30_06_2024_y_axis_correct.log")
+log_file = os.path.join(cwd, "detections_30_06_2024_y_axis_correct_no_2_camera_constraint.log")
 file_handler = FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
