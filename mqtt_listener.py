@@ -46,7 +46,7 @@ logger.setLevel(logging.INFO)
 
 # Create a file handler
 cwd = os.getcwd()
-log_file = os.path.join(cwd, "detections_30_06_2024_y_axis_correct_no_2_camera_constraint.log")
+log_file = os.path.join(cwd, "detections_30_06_2024_y_axis_correct.log")
 file_handler = FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
@@ -158,8 +158,7 @@ def send_detections_periodically():
                   "P": 1,
                   "Pa": 0,
                   "G": 0,
-                  "O": 0,
-                  "timestamp": time()
+                  "O": 0
                 }
                 log_message = {
                     "mqtt_message": mqtt_message,

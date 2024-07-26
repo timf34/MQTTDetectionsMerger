@@ -261,13 +261,12 @@ class MultiCameraTracker:
                 camera_j_coords = self._camera_coords_to_np_array(_detections[j].camera_id)
                 print(_detections[i], camera_i_coords, _detections[j], camera_j_coords, "\n")
                 triangulation_result = self.triangulate(_detections[i], camera_i_coords, _detections[j], camera_j_coords)
-                # filtered_triangulation_result = self._filter_triangulation_result(triangulation_result)
-                filtered_triangulation_result = triangulation_result
-                # if filtered_triangulation_result:
-                #     print(f"filtered_triangulation_result: {filtered_triangulation_result}")
-                #     self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
-                #     self.multi_camera_det_counter = 0
-                triangulation_points.append(np.array([filtered_triangulation_result.x, filtered_triangulation_result.y, filtered_triangulation_result.z]))
+                filtered_triangulation_result = self._filter_triangulation_result(triangulation_result)
+                if filtered_triangulation_result:
+                    print(f"filtered_triangulation_result: {filtered_triangulation_result}")
+                    self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
+                    self.multi_camera_det_counter = 0
+                    triangulation_points.append(np.array([filtered_triangulation_result[0], filtered_triangulation_result[1], filtered_triangulation_result[2]]))
 
         # Calculate the centroid of all triangulation points
         if not triangulation_points:
@@ -288,14 +287,14 @@ class MultiCameraTracker:
         camera2_coords = self._camera_coords_to_np_array(_detections[1].camera_id)
 
         triangulation_result = self.triangulate(_detections[0], camera1_coords, _detections[1], camera2_coords)
-        # filtered_triangulation_result = self._filter_triangulation_result(triangulation_result)
-        filtered_triangulation_result = triangulation_result  # Temp commit to remove two camera constraint
-        # if filtered_triangulation_result:
-        #     self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
-        #     self.multi_camera_det_counter = 0
-        three_d_det = Detections(camera_id=0, x=filtered_triangulation_result.x, y=filtered_triangulation_result.y, z=filtered_triangulation_result.z)
-        # self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras = deepcopy(three_d_det)
-        return three_d_det
+        filtered_triangulation_result = self._filter_triangulation_result(triangulation_result)
+        if filtered_triangulation_result:
+            self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame = True
+            self.multi_camera_det_counter = 0
+            three_d_det = Detections(camera_id=0, x=filtered_triangulation_result[0], y=filtered_triangulation_result[1], z=filtered_triangulation_result[2])
+            self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras = deepcopy(three_d_det)
+            return three_d_det
+        return None
 
     def _set_latest_camera_id(self, _detections: List[Detections]) -> None:
         if len(_detections) > 0:
