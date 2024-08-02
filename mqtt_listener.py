@@ -46,7 +46,7 @@ logger.setLevel(logging.INFO)
 
 # Create a file handler
 cwd = os.getcwd()
-log_file = os.path.join(cwd, "detections_30_06_2024_y_axis_correct.log")
+log_file = os.path.join(cwd, "detections_2_08_2024.log")
 file_handler = FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
@@ -81,14 +81,13 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     if isinstance(received_message, bytes) and received_message != '':
         received_message = received_message.decode("utf-8")
 
-
-    # Log the received message and timestamp
-    log_entry = {
-        "type": "received",
-        "message": received_message,
-        "timestamp": elapsed_time
-    }
-    logger.info(json.dumps(log_entry))
+    # # Log the received message and timestamp
+    # log_entry = {
+    #     "type": "received",
+    #     "message": received_message,
+    #     "timestamp": elapsed_time
+    # }
+    # logger.info(json.dumps(log_entry))
 
     received_message_json = json.loads(received_message)
 
