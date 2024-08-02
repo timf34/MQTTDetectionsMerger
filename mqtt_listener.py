@@ -118,7 +118,7 @@ def send_detections_periodically():
 
         for camera_id, detection in detections_buffer.items():
             # TODO: Change this back to 0.4 seconds for production
-            if current_time - detection.timestamp <= 0.8:
+            if current_time - detection.timestamp <= 0.6:
                 detections_to_send.append(detection)
 
         print("\n buffer: ", detections_to_send)
