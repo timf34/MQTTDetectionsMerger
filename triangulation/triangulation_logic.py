@@ -87,7 +87,9 @@ class MultiCameraTracker:
         self.ball_has_been_detected_by_two_or_more_cameras_within_time_frame: bool = False
         self.triangulated_position_where_ball_was_last_detected_by_two_or_more_cameras: Optional[Detections] = None
         self.buffer_radius: int = 40
-        self.acceptable_time_frame_for_single_cam_det_after_two_or_more_cam_dets: int = 50  # accept single cam dets in the same area for 50 frames
+        # TODO: check if the below is implemented correctly... is this method/ class always called from mqtt_listener even if there's no dets?
+        #  Not sure if this is really used for much right now even tbh
+        self.acceptable_time_frame_for_single_cam_det_after_two_or_more_cam_dets: int = 30  # accept single cam dets in the same area for 50 frames
         self.multi_camera_det_counter: int = 0  # Counter for how many frames since the ball was last detected by two or more cameras
 
         self._instantiate_cameras()
