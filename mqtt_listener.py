@@ -13,7 +13,6 @@ from aws_iot.IOTClient import IOTClient
 from aws_iot.IOTContext import IOTContext, IOTCredentials
 from config import MQTTMergerConfig
 from data_models import Detections
-from round_trip_latency_measuring import MQTTLatencyMeasurer
 from triangulation.triangulation_logic import MultiCameraTracker
 from utils import convert_dicts_to_detections
 
@@ -210,9 +209,6 @@ if __name__ == "__main__":
 
     # Set a timeout for 6 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
 
-    latency_sender = MQTTLatencyMeasurer()
-    latency_sender.start()
-
     # TODO: Ensure that this can run indefinitely and doesn't time out
     temp_received_count = 0
     while not received_all_event.is_set():
@@ -223,7 +219,6 @@ if __name__ == "__main__":
 
     received_all_event.wait()  # https://docs.python.org/3/library/threading.html#threading.Event.wait used with .set()
 
-    latency_sender.stop()
     disconnect_future = iot_manager.disconnect()
     disconnect_future.result()
     print("Disconnected!")
