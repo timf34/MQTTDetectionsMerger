@@ -144,12 +144,10 @@ def send_detections_periodically():
                 normalized_y = min(three_d_point.y, 128.8)
 
                 normalized_x = normalized_x / 159.5
-                # normalized_x *= 159.5
                 normalized_x *= 102
 
                 # normalized_y = 128.8 - normalized_y  # Keep commented out for correct visualisation on laptop at least
                 normalized_y = normalized_y / 128.8
-                # normalized_y *= 128.8
                 normalized_y *= 65
 
                 mqtt_message = {
