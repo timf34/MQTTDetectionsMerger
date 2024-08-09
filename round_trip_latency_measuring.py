@@ -30,6 +30,7 @@ class MQTTLatencyMeasurer:
         self.receive_topic = "esp32/echo"
         self.log_file = "latency_log.txt"
         self.reconnect_interval = 3600  # 1 hour
+        self.message_number: int = 0  # Number of messages sent, will use for key
 
         self.iot_credentials = IOTCredentials(
             cert_path=self.config.cert_path,
@@ -78,13 +79,14 @@ class MQTTLatencyMeasurer:
                 last_reconnect_time = current_time
 
             for _ in range(40):  # Send 40 messages
-                message_id = str(uuid.uuid4())
+                message_id = str(self.message_number)
                 message = {"ID": message_id, "time": time.time()}
                 self.pending_messages[message_id] = time.time()
                 try:
                     self.iot_client.publish(topic=self.send_topic, payload=json.dumps(message))
                 except Exception as e:
                     print(f"Failed to publish message: {str(e)}")
+                self.message_number += 1
                 time.sleep(0.05)  # 0.05 second delay between messages
 
             print("Sent 50 messages. Waiting for 30 seconds...")
