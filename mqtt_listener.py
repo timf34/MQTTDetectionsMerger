@@ -13,6 +13,7 @@ from aws_iot.IOTClient import IOTClient
 from aws_iot.IOTContext import IOTContext, IOTCredentials
 from config import MQTTMergerConfig
 from data_models import Detections
+from round_trip_latency_measuring import MQTTLatencyMeasurer
 from triangulation.triangulation_logic import MultiCameraTracker
 from utils import convert_dicts_to_detections
 
@@ -117,7 +118,11 @@ def send_detections_periodically():
 
         for camera_id, detection in detections_buffer.items():
             # TODO: Change this back to 0.4 seconds for production
-            if current_time - detection.timestamp <= 0.5:
+
+            # detection_lag = current_time - detection.timestamp
+            # print("detection lag: ", detection_lag)
+
+            if current_time - detection.timestamp <= 0.55:
                 detections_to_send.append(detection)
 
         print("\n buffer: ", detections_to_send)
@@ -144,7 +149,7 @@ def send_detections_periodically():
                 normalized_x = normalized_x / 159.5
                 normalized_x *= 102
 
-                # normalized_y = 128.8 - normalized_y  # Keep commented out for correct visualisation on laptop at least
+                normalized_y = 128.8 - normalized_y  # Keep commented out for correct visualisation on laptop at least
                 normalized_y = normalized_y / 128.8
                 normalized_y *= 65
 
@@ -208,6 +213,9 @@ if __name__ == "__main__":
 
     # Set a timeout for 6 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
 
+    latency_sender = MQTTLatencyMeasurer()
+    latency_sender.start()
+
     # TODO: Ensure that this can run indefinitely and doesn't time out
     temp_received_count = 0
     while not received_all_event.is_set():
@@ -216,8 +224,10 @@ if __name__ == "__main__":
             sleep(0.5)
             continue
 
+
     received_all_event.wait()  # https://docs.python.org/3/library/threading.html#threading.Event.wait used with .set()
 
+    latency_sender.stop()
     disconnect_future = iot_manager.disconnect()
     disconnect_future.result()
     print("Disconnected!")
