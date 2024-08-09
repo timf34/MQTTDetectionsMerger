@@ -22,6 +22,7 @@ from aws_iot.IOTContext import IOTContext, IOTCredentials
 from aws_iot.IOTClient import IOTClient
 from config import MQTTMergerConfig
 
+
 class MQTTLatencyMeasurer:
     def __init__(self):
         self.config = MQTTMergerConfig()
@@ -76,7 +77,7 @@ class MQTTLatencyMeasurer:
                 self.reconnect()
                 last_reconnect_time = current_time
 
-            for _ in range(50):  # Send 50 messages
+            for _ in range(40):  # Send 40 messages
                 message_id = str(uuid.uuid4())
                 message = {"ID": message_id, "time": time.time()}
                 self.pending_messages[message_id] = time.time()
@@ -87,7 +88,7 @@ class MQTTLatencyMeasurer:
                 time.sleep(0.05)  # 0.05 second delay between messages
 
             print("Sent 50 messages. Waiting for 30 seconds...")
-            time.sleep(30)  # Wait for 30 seconds before the next batch
+            time.sleep(60)  # Wait for 60 seconds before the next batch
 
     def on_message_received(self, topic, payload, dup, qos, retain, **kwargs):
         receive_time = time.time()
