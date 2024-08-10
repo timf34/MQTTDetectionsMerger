@@ -118,15 +118,11 @@ def send_detections_periodically():
 
         for camera_id, detection in detections_buffer.items():
             # TODO: Change this back to 0.4 seconds for production
-
-            # detection_lag = current_time - detection.timestamp
-            # print("detection lag: ", detection_lag)
-
             if current_time - detection.timestamp <= 0.55:
                 detections_to_send.append(detection)
 
-        print("\n buffer: ", detections_to_send)
-        print(current_time)
+        # print("\n buffer: ", detections_to_send)
+        # print(current_time)
 
         if detections_to_send:
             log_entry = {
