@@ -27,7 +27,7 @@ class MQTTLatencyMeasurer:
     def __init__(self):
         self.config = MQTTMergerConfig()
         self.send_topic = "marvel_AUS/ai_pub"
-        self.receive_topic = "esp32/echo"
+        self.receive_topic = "esp32/globalTest"
         self.log_file = "latency_log.txt"
         self.reconnect_interval = 3600  # 1 hour
         self.message_number: int = 0  # Number of messages sent, will use for key
