@@ -47,7 +47,7 @@ logger.setLevel(logging.INFO)
 
 # Create a file handler
 cwd = os.getcwd()
-log_file = os.path.join(cwd, "detections_test.log")
+log_file = os.path.join(cwd, "detections_test2.log")
 file_handler = FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
@@ -68,6 +68,43 @@ file_handler.setFormatter(json_formatter)
 
 # Add the handler to the logger
 logger.addHandler(file_handler)
+
+
+def log_incoming_detections(received_message):
+    """
+    Logs the incoming detections when received.
+    """
+    log_entry = {
+        "type": "incoming_detections",
+        "message": received_message,
+    }
+    logger.info(log_entry)
+
+
+def log_buffered_detections(detections_to_send):
+    """
+    Logs detections that make it through the buffer.
+    """
+    log_entry = {
+        "type": "buffered_detections",
+        "detections": [d.__dict__ for d in detections_to_send],
+    }
+    logger.info(log_entry)
+
+
+def log_3d_detections(mqtt_message, three_d_point):
+    """
+    Logs the 3D detections that are sent to the device.
+    """
+    log_message = {
+        "mqtt_message": mqtt_message,
+        "three_d_point": asdict(three_d_point),
+    }
+    log_entry = {
+        "type": "3d_detections",
+        "message": log_message,
+    }
+    logger.info(log_entry)
 
 
 def on_message_received(topic, payload, dup, qos, retain, **kwargs):
@@ -91,6 +128,7 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     # logger.info(json.dumps(log_entry))
 
     received_message_json = json.loads(received_message)
+    log_incoming_detections(received_message_json)
 
     # if received_message_json.get("detections") != []:
     #     print("detections: ", received_message_json.get("detections"))
@@ -125,13 +163,8 @@ def send_detections_periodically():
         # print(current_time)
 
         if detections_to_send:
-            log_entry = {
-                "type": "detections_to_send",
-                "detections": [d.__dict__ for d in detections_to_send],
-                "timestamp": current_time
-            }
-            print("detections to send: ", detections_to_send, "\n\n")
-            logger.info(json.dumps(log_entry))
+
+            log_buffered_detections(detections_to_send)
 
             # Dets in the detections buffer get adjusted sometimes if we don't use deepcopy here
             three_d_point = tracker.multi_camera_analysis(deepcopy(detections_to_send), {})
@@ -159,17 +192,7 @@ def send_detections_periodically():
                   "G": 0,
                   "O": 0
                 }
-                log_message = {
-                    "mqtt_message": mqtt_message,
-                    "three_d_point": asdict(three_d_point),
-                }
-                log_entry = {
-                    "type": "published",
-                    "message": log_message,
-                    "timestamp": time()
-                }
-                logger.info(json.dumps(log_entry))
-                print("sending: ", log_message, "\n")
+                log_3d_detections(mqtt_message, three_d_point)
                 iot_manager.publish(payload=json.dumps(mqtt_message))
             else:
                 tracker.increment_frame_count_since_two_camera_det()
