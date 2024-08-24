@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     # Set a timeout for 6 hours (3 hours * 60 minutes/hour * 60 seconds/minute)
 
-    latency_sender = MQTTLatencyMeasurer()
+    # latency_sender = MQTTLatencyMeasurer()
 
     # TODO: Ensure that this can run indefinitely and doesn't time out
     temp_received_count = 0
@@ -241,10 +241,10 @@ if __name__ == "__main__":
             continue
 
 
-    latency_sender.start()  # Only start once we have received a message at least
+    # latency_sender.start()  # Only start once we have received a message at least
     received_all_event.wait()  # https://docs.python.org/3/library/threading.html#threading.Event.wait used with .set()
 
-    latency_sender.stop()
+    # latency_sender.stop()
     disconnect_future = iot_manager.disconnect()
     disconnect_future.result()
     print("Disconnected!")
