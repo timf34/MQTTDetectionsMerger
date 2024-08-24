@@ -47,7 +47,7 @@ logger.setLevel(logging.INFO)
 
 # Create a file handler
 cwd = os.getcwd()
-log_file = os.path.join(cwd, "detections_2_08_2024.log")
+log_file = os.path.join(cwd, "detections_test.log")
 file_handler = FileHandler(log_file)
 file_handler.setLevel(logging.INFO)
 
@@ -58,9 +58,9 @@ class JsonFormatter(Formatter):
         log_record = {
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
-            "message": record.getMessage()
+            "message": record.msg
         }
-        return json.dumps(log_record)
+        return json.dumps(log_record, indent=2)
 
 
 json_formatter = JsonFormatter()
