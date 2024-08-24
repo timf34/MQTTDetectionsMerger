@@ -17,12 +17,8 @@ from round_trip_latency_measuring import MQTTLatencyMeasurer
 from triangulation.triangulation_logic import MultiCameraTracker
 from utils import convert_dicts_to_detections
 
-# TODO: Need to measure average latency between cameras and this MQTT channel. It's important for
-#  filtering out older detections (see below)
-
 # TODO: generally needs to ensure the timing mechanisms in send_detections_periodically is correct
 
-# TODO: Remove all the backslashes from the log messages.
 
 NUM_MESSAGES = 10000000
 received_count = 0
