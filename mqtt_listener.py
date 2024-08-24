@@ -92,8 +92,8 @@ def on_message_received(topic, payload, dup, qos, retain, **kwargs):
 
     received_message_json = json.loads(received_message)
 
-    if received_message_json.get("detections") != []:
-        print("detections: ", received_message_json.get("detections"))
+    # if received_message_json.get("detections") != []:
+    #     print("detections: ", received_message_json.get("detections"))
 
 
     detection_list = received_message_json["detections"]
@@ -117,8 +117,8 @@ def send_detections_periodically():
         detections_to_send = []
 
         for camera_id, detection in detections_buffer.items():
-            # TODO: Change this back to 0.4 seconds for production
-            if current_time - detection.timestamp <= 0.55:
+            # TODO: Change this back to 0.6 seconds for production
+            if current_time - detection.timestamp <= 0.6:
                 detections_to_send.append(detection)
 
         # print("\n buffer: ", detections_to_send)
@@ -130,11 +130,12 @@ def send_detections_periodically():
                 "detections": [d.__dict__ for d in detections_to_send],
                 "timestamp": current_time
             }
+            print("detections to send: ", detections_to_send, "\n\n")
             logger.info(json.dumps(log_entry))
 
             # Dets in the detections buffer get adjusted sometimes if we don't use deepcopy here
             three_d_point = tracker.multi_camera_analysis(deepcopy(detections_to_send), {})
-            print("three d point: ", three_d_point)
+            # print("three d point: ", three_d_point)
 
             if three_d_point is not None:
 
@@ -168,9 +169,10 @@ def send_detections_periodically():
                     "timestamp": time()
                 }
                 logger.info(json.dumps(log_entry))
-                print(mqtt_message)
                 print("sending: ", log_message, "\n")
                 iot_manager.publish(payload=json.dumps(mqtt_message))
+            else:
+                tracker.increment_frame_count_since_two_camera_det()
 
         sleep(1 / 6)  # Wait for 1/6 seconds
 
