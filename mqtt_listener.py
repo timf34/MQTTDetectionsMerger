@@ -237,7 +237,7 @@ if __name__ == "__main__":
     while not received_all_event.is_set():
         if len(received_message) == 0:
             print("received_message is empty. Continuing...")
-            sleep(0.5)
+            sleep(3)
             continue
 
 
