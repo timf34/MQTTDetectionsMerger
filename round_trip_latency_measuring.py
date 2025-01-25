@@ -96,16 +96,29 @@ class MQTTLatencyMeasurer:
         receive_time = time.time()
         try:
             message = json.loads(payload)
-            message_id = message['ID']
+            message_id = message["ID"]
+            # Grab the device ID if present, otherwise "unknown"
+            device_id = message.get("device_id", "unknown")
+
             if message_id in self.pending_messages:
                 send_time = self.pending_messages[message_id]
-                latency = (receive_time - send_time) * 1000  # Convert to milliseconds
-                log_entry = f"Message {message_id}: Latency = {latency:.2f} ms, Sent at {send_time}, Received at {receive_time}\n"
+                latency = (receive_time - send_time) * 1000  # ms
+                log_entry = (
+                    f"Device {device_id}, "
+                    f"Message {message_id}, "
+                    f"Latency = {latency:.2f} ms, "
+                    f"Sent at {send_time}, Received at {receive_time}\n"
+                )
                 self.log_to_file(log_entry)
-                print(f"Round-trip latency for message {message_id}: {latency:.2f} ms")
-                del self.pending_messages[message_id]
+                print(log_entry, end="")  # Already has newline
+
+                # Don't delete the pending message immediately;
+                # let the cleanup thread remove it after 60 seconds.
+                # del self.pending_messages[message_id]
+                
         except Exception as e:
             print(f"Error processing received message: {str(e)}")
+
 
     def log_to_file(self, log_entry):
         try:
