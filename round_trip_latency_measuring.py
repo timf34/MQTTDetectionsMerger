@@ -19,6 +19,7 @@ import time
 import uuid
 import threading
 import statistics
+import datetime
 from collections import defaultdict
 from aws_iot.IOTContext import IOTContext, IOTCredentials
 from aws_iot.IOTClient import IOTClient
@@ -151,8 +152,11 @@ class MQTTLatencyMeasurer:
             mean_latency = statistics.mean(latencies)
             median_latency = statistics.median(latencies)
             
+            # Get current date and time in a human-readable format
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
             stats_message = (
-                f"\n\n\n----- Batch {batch_number} Statistics -----\n"
+                f"\n----- Batch {batch_number} Statistics [{current_time}] -----\n"
                 f"Responses received: {len(latencies)}/{self.batch_size}\n"
                 f"Mean latency: {mean_latency:.2f} ms\n"
                 f"Median latency: {median_latency:.2f} ms\n"
