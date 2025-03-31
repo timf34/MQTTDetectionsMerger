@@ -26,7 +26,7 @@ from config import MQTTMergerConfig
 class MQTTLatencyMeasurer:
     def __init__(self):
         self.config = MQTTMergerConfig()
-        self.send_topic = "dalymount_IRL/pub"
+        self.send_topic = "aviva_IRL/sub"
         self.receive_topic = "esp32/echo"
         self.log_file = "latency_log.txt"
         self.reconnect_interval = 3600  # 1 hour
