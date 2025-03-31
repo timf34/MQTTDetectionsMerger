@@ -96,7 +96,7 @@ class MQTTLatencyMeasurer:
                 except Exception as e:
                     print(f"Failed to publish message: {str(e)}")
                 self.message_number += 1
-                time.sleep(0.05)  # 0.05 second delay between messages
+                time.sleep(0.25)  # 0.05 second delay between messages
 
             print(f"Sent {self.batch_size} messages in batch {self.current_batch}. Waiting for 20 seconds...")
 
