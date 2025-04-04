@@ -42,38 +42,38 @@
             "dates": {
                 "20-08-2023": {
                     "pitch_pixel_coords": {
-                        "BehindPost1": [699, 136],
-                        "BehindPost2": [534, 243],
-                        "GoalPost1": [647, 169],
-                        "GoalPost2": [592, 206],
-                        "GoalSquare1": [727, 157],
-                        "GoalSquare2": [671, 193],
+                        "BehindPost1": [732, 684],
+                        "BehindPost2": [545, 742],
+                        "GoalPost1": [671, 700],
+                        "GoalPost2": [610, 720],
+                        "GoalSquare1": [752, 713],
+                        "GoalSquare2": [690, 734],
                         "Arc1Point1": [],
                         "Arc1Centre": [],
-                        "Arc1Point2": [299, 531],
+                        "Arc1Point2": [240, 942],
                         "SquareCorner1": [],
-                        "SquareCorner2": [1051, 307],
+                        "SquareCorner2": [1028, 937],
                         "SquareCorner3": [],
                         "SquareCorner4": [],
-                        "CirclesCentre": [1691, 79],
-                        "BigCircleLine1": [1707, 49],
-                        "BigCircleLine2": [1674, 113],
+                        "CirclesCentre": [1705, 821],
+                        "BigCircleLine1": [1729, 791],
+                        "BigCircleLine2": [1680, 853],
                         "SmallCircleLine1": [],
                         "SmallCircleLine2": [],
                         "SquareMidpoint1": [],
                         "Arc1Midpoint1": [],
-                        "WestSquareMidpoint": [1578, 299],
-                        "WestFieldMidpoint": [1111, 1079]
+                        "WestSquareMidpoint": [1552, 1022],
+                        "WestFieldMidpoint": []
                     },
                     "camera_coords": {
                         "real_world_x": 100.75,
                         "real_world_y": -21.3,
                         "real_world_z": 27.2
                     },
-                    "image_field_coordinates": [[1920, 1080], [1036, 1080], [518, 866], [342, 720], [272, 608], [291, 469],[378, 365], [462, 287], [524, 236], [630, 168], [687, 136], [1573, 0], [1920, 0]]
+                    "image_field_coordinates": [[1920, 1080], [213, 1080], [213, 940], [288, 853], [399, 795], [482, 757], [585, 724], [711, 681], [955, 702], [1228, 719], [1675, 729], [1920, 728]]
                 }
             },
-            "default_image_field_coordinates": [[1920, 1080], [1036, 1080], [518, 866], [342, 720], [272, 608], [291, 469],[378, 365], [462, 287], [524, 236], [630, 168], [687, 136], [1573, 0], [1920, 0]]
+            "default_image_field_coordinates": [[1920, 1080], [213, 1080], [213, 940], [288, 853], [399, 795], [482, 757], [585, 724], [711, 681], [955, 702], [1228, 719], [1675, 729], [1920, 728]]
         },
         "marvel3": {
             "location": "Marvel Stadium, Melbourne",
@@ -82,31 +82,34 @@
                     "pitch_pixel_coords": {
                         "BehindPost1": [554, 969],
                         "BehindPost2": [],
-                        "GoalPost1": [723, 1020],
-                        "GoalPost2": [931, 1076],
-                        "GoalSquare1": [874, 804],
-                        "GoalSquare2": [1064, 834],
-                        "Arc1Point1": [289, 535],
+                        "GoalPost1": [],
+                        "GoalPost2": [],
+                        "GoalSquare1": [],
+                        "GoalSquare2": [],
+                        "Arc1Point1": [267, 773],
                         "Arc1Centre": [],
-                        "SquareCorner1": [933, 223],
-                        "SquareCorner2": [1816, 221],
-                        "SquareCorner3": [],
-                        "SquareCorner4": [1198, 7],
-                        "CirclesCentre": [1429, 75],
-                        "BigCircleLine1": [1359, 76],
-                        "BigCircleLine2": [1503, 73],
-                        "SmallCircleLine1": [1410, 75],
-                        "SmallCircleLine2": [1452, 74]
+                        "SquareCorner1": [940, 542],
+                        "SquareCorner2": [1819, 577],
+                        "SquareCorner3": [1794, 354],
+                        "SquareCorner4": [1222, 342],
+                        "CirclesCentre": [1446, 442],
+                        "BigCircleLine1": [1374, 420],
+                        "BigCircleLine2": [1518, 423],
+                        "SmallCircleLine1": [],
+                        "SmallCircleLine2": [],
+                        "WestSquareMidpoint": [1805, 431],
+                        "EastSquareMidpoint": [1117, 415],
+                        "EastFieldMidpoint": [730, 409]
                     },
                     "camera_coords": {
                         "real_world_x": -21.15,
                         "real_world_y": 42.4,
                         "real_world_z": 30.5
                     },
-                    "image_field_coordinates": [[1920, 0], [1920, 1080], [855, 1080], [520, 1020], [237, 723], [283, 476], [509, 240], [668, 130], [822, 49], [932, 0]]
+                    "image_field_coordinates": [[1920, 1080], [282, 1078], [216, 920], [234, 776], [322, 669], [445, 556], [568, 485], [640, 444], [720, 409], [843, 356], [1224, 341], [1920, 350]]
                 }
             },
-            "default_image_field_coordinates": [[1920, 0], [1920, 1080], [855, 1080], [520, 1020], [237, 723], [283, 476], [509, 240], [668, 130], [822, 49], [932, 0]]
+            "default_image_field_coordinates": [[1920, 1080], [282, 1078], [216, 920], [234, 776], [322, 669], [445, 556], [568, 485], [640, 444], [720, 409], [843, 356], [1224, 341], [1920, 350]]
         },
         "marvel4": {
             "location": "Marvel Stadium, Melbourne",
